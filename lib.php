@@ -18,14 +18,14 @@
  * Custom Grader Lib to access to navigationlib
  *
  * @author     Camilo José Cruz Rivera
- * @package    block_ases
+ * @package    custom_grader
  * @copyright  2018 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
 
-function local_wizardcategories_extend_navigation_course($parentnode, $course, $context) {
+function local_customgrader_extend_navigation_course($parentnode, $course, $context) {
     global $CFG, $PAGE;
 
     // Only add this settings item on non-site course pages.
