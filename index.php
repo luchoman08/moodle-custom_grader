@@ -22,7 +22,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once 'wizard_lib.php';
+
+require_once '../../config.php';
+require_once 'managers/grader_lib.php';
 require_once($CFG->dirroot . '/grade/export/lib.php');
 require_once $CFG->dirroot . '/grade/lib.php';
  $courseid        = required_param('id', PARAM_INT);
@@ -39,23 +41,30 @@ if (!$course = $DB->get_record('course', array('id' => $courseid))) {
 require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/grade:manage', $context);
+$PAGE->requires->css('/local/customgrader/style/styles_grader.css', true);
 $PAGE->requires->css('/local/customgrader/style/styles_wizard.css', true);
 $PAGE->requires->css('/local/customgrader/style/sweetalert.css', true);
 
 $PAGE->requires->js_call_amd('local_customgrader/wizard_categories', 'init');
+$PAGE->requires->js_call_amd('local_customgrader/grader', 'init');
 
 
 print_grade_page_head($courseid, 'settings', null, '', false, false, false);
 // print_grade_page_head($courseid, 'settings', 'setup', get_string('gradebooksetup', 'grades'));
 
-// Print Table of categories and items
 echo $OUTPUT->box_start('gradetreebox generalbox');
-$title = get_string('gradebooksetup', 'grades');
-$html_table = getCategoriesandItems($courseid);
+$title = get_string('gradebook', 'grades');
+
+$info_course = get_categories_global_grade_book($courseid);
+$info_wizard = getCategoriesandItems($courseid);
+
+$course_name = $course->fullname;
 
 $tpldata = new stdClass;
 $tpldata->title = $title;
-$tpldata->info = $html_table;
+$tpldata->nombre_curso = $course_name;
+$tpldata->info_wizard = $info_wizard;
+$tpldata->table = $info_course;
 
 echo $OUTPUT->render_from_template('local_customgrader/index', $tpldata);
 

@@ -24,7 +24,6 @@
  */
 
 
-require_once '../../config.php';
 require_once $CFG->libdir . '../../lib/gradelib.php';
 require_once $CFG->dirroot . '/grade/lib.php';
 require_once $CFG->dirroot . '/grade/report/user/lib.php';
@@ -520,7 +519,8 @@ function print_table_categories($report)
                 if (isCategory($content)) {
                     $categoryid = explode("_", $id)[1];
                     $weight = getweightofCategory($categoryid);
-                    if (!$weight) {
+                    $id_parent = get_id_parent_category($categoryid);
+                    if (!$weight || getAggregationofCategory($id_parent) != 10) {
                         $weight = '-';
                     } else {
                         $weight = '(' . floatval($weight) . ' %)';
@@ -528,7 +528,6 @@ function print_table_categories($report)
                     $aggregation = getAggregationofCategory($categoryid);
                     $maxweight = getMaxWeight($categoryid);
 
-                    $id_parent = get_id_parent_category($categoryid);
                     if (!$id_parent) {
                         $maxweight_parent = $maxweight;
                     } else {
@@ -543,12 +542,12 @@ function print_table_categories($report)
                 } else {
                     $id_item = explode("_", $id)[1];
                     $weight = getweightofItem($id_item);
-                    if (!$weight) {
+                    $categoryid = get_id_parent_item($id_item, $report->courseid);
+                    if (!$weight || getAggregationofCategory($categoryid) != 10) {
                         $weight = '-';
                     } else {
                         $weight = '(' . floatval($weight) . ' %)';
                     }
-                    $categoryid = get_id_parent_item($id_item, $report->courseid);
                     $maxweight = getMaxWeight($categoryid);
                     if (isItemMod($id_item, $report->courseid)) {
                         $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon glyphicon-pencil edit'/></div></div> </$celltype>\n";

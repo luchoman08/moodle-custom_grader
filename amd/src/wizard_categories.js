@@ -1,6 +1,10 @@
 /**
- * @module local_customgrader/wizard_categories
- */
+* Wizard Categories management
+* @module local_customgrader/wizard_categories
+* @author Camilo José Cruz rivera
+* @copyright 2018 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co> 
+* @license  http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+*/
 
 define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert', 'local_customgrader/jqueryui'], function ($, sweetalert) {
 
@@ -9,14 +13,24 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
         init: function () {
             var old_weight;
             var maxweight;
-
+ 
             //Metodos de Wizard de crear categorias e items
+
+            $(document).on('click', '#wizard_button', function () {
+                $("#modalCategories").modal({
+                    backdrop: false
+                });
+                $('.fondo').show();
+            });
 
             /**
              * Event to close modal
              */
-            $(document).on('click', '.mymodal-close, #cancel', function () {
+            $(document).on('click','#cancel', function () {
                 $('.fondo').hide();
+            });
+            $(document).on('click', '.mymodal-close', function () {
+                location.reload();
             });
 
             /**
@@ -190,7 +204,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         type: "editElement",
                         parent: parent_id
                     },
-                    url: "processing.php",
+                    url: "managers/ajax_processing.php",
                     success: function (msg) {
                         if (msg.error) {
                             swal('Error',
@@ -365,7 +379,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         type_e: type_e,
                         type: "loadParentCat"
                     },
-                    url: "processing.php",
+                    url: "managers/ajax_processing.php",
                     success: function (msg) {
                         console.log(msg);
                         $('#padre').html(msg.html);
@@ -397,7 +411,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         courseid: id_course,
                         type: type_e
                     },
-                    url: "processing.php",
+                    url: "managers/ajax_processing.php",
                     success: function (msg) {
                         swal({
                             title: "Listo",
@@ -446,9 +460,9 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         course: id,
                         type: "loadCat"
                     },
-                    url: "processing.php",
+                    url: "managers/ajax_processing.php",
                     success: function (msg) {
-                        $("#info").html(msg);
+                        $("#mymodalbody").html(msg);
                     },
                     dataType: "text",
                     cache: "false",
@@ -485,7 +499,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                                 tipo: tipoItem,
                                 peso: weigth
                             },
-                            url: "processing.php",
+                            url: "managers/ajax_processing.php",
                             success: function (msg) {
                                 //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
                                 if (msg == 1) {
@@ -535,7 +549,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                                 tipo: tipoItem,
                                 peso: weigth
                             },
-                            url: "processing.php",
+                            url: "managers/ajax_processing.php",
                             success: function (msg) {
                                 //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
                                 if (msg == 1) {
@@ -584,7 +598,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                                 tipo: tipoItem,
                                 peso: weigth
                             },
-                            url: "processing.php",
+                            url: "managers/ajax_processing.php",
                             success: function (msg) {
                                 //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
                                 if (msg == 1) {

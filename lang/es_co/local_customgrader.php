@@ -13,16 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package     custom_grader
- * @copyright   2018 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Strings for local plugin 'customgrader', language 'en'
+ *
+ * @package   customgrader
+ * @copyright  2018 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author    Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
+ *
  */
 
-defined('MOODLE_INTERNAL') || die();
-$plugin->component = 'local_customgrader';
-$plugin->release = '1.0';
-$plugin->version = 2018080302;
-$plugin->requires = 2015030900;
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->dependencies = array();
+ $string['title'] = 'Calificador Personalizado';

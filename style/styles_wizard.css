@@ -62,8 +62,8 @@
 }
 
 .generaltable{
-  width: 80%;
-  margin-left: 50px;
+  width: 95%;
+  margin-left: 20px;
 }
 
 /* Rules for modals */
@@ -89,7 +89,6 @@
   margin: 15% auto; /* 15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 400px;
   margin-bottom: 20px;
   margin-top: 15%;
 }
@@ -124,7 +123,6 @@
 /* Modal Body */
 .mymodal-body {
 margin-top: 30px;
-padding: 10px;
 }
 
 /* Modal Footer */
@@ -153,4 +151,11 @@ padding: 10px;
   float:left;
   margin-left: auto;
   margin-right: auto;
+}
+
+#content-edit{
+  width: 400px;
+}
+#content-create{
+  width: 700px;
 }

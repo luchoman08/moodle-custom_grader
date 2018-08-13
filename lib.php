@@ -38,16 +38,15 @@ function local_customgrader_extend_navigation_course($parentnode, $course, $cont
         return;
     }
  
-        //$strfoo = get_string('foo', 'local_customgrader');
+        $title = get_string('title', 'local_customgrader');
         $url = new moodle_url('/local/customgrader/index.php', array('id' => $PAGE->course->id));
         $indexnode = navigation_node::create(
-            //PONER ESTE TITULO CON get_string al añadir lenguaje
-            'Custom Grader',
+            $title,
             $url,
             navigation_node::NODETYPE_LEAF,
             'local_customgrader',
             'local_customgrader',
-            new pix_icon('i/settings', '')
+            new pix_icon('t/grades', '')
         );
         if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
             $indexnode->make_active();
