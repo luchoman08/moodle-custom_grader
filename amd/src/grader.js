@@ -13,9 +13,12 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
             var grade;
 
             $(document).ready(function () {
-                //METODOS PARA RAMA UNIVALLE
-                // var pilos = getIDs();
-                // deleteNoPilos(pilos);
+                ////////////////////////////////////////////////////////////////////////////////////////////
+                ////SOLO RAMA UNIVALLE
+                var ases = getIDs();
+                marckAses(ases);
+                ////////////////////////////////////////////////////////////////////////////////////////////
+
                 bloquearTotales();
                 if ($('.gradingerror').length != 0) {
                     //if gradingerror, update items that needsupdate 
@@ -66,7 +69,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         dataType: "json",
                         cache: "false",
                         error: function (msg) {
-                             console.log(msg); 
+                            console.log(msg);
                         }
                     });
                 }
@@ -180,64 +183,55 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
 
             }
 
-            //METODOS PARA RAMA UNIVALLE
-            // /**
-            //  * @method deleteNoPilos
-            //  * @desc Removes every student who's not 'pilo'. IF the student is 'pilo' remove href attribute (link to other page)
-            //  * @param {array} pilos 'pilos' students to filtrate with the entry from DOM
-            //  * @return {void}
-            //  */
-            // function deleteNoPilos(pilos) {
-            //     $("#user-grades").children().children().each(function () {
-            //         if ($(this).attr('data-uid') != undefined) {
-            //             if (!isPilo($(this).attr('data-uid'), pilos)) {
-            //                 $(this).remove();
-            //             } else {
-            //                 $(this).children('th').children().each(function () {
-            //                     $(this).removeAttr('href');
-            //                     $(this).click(function () {
-            //                         var id = $(this).parent().parent().attr('data-uid');
-            //                         var code = $('#idmoodle_' + id).attr('data-code');
-            //                         var pagina = "student_profile.php";
-            //                         var url = pagina + location.search + "&student_code=" + code;
-            //                         //window.open(url, '_blank');
-            //                     });
-            //                 });
-            //             }
-            //         }
-            //     });
-            // }
+            ////////////////////////////////////////////////////////////////////////////////////////////
+            ////SOLO RAMA UNIVALLE
+            /**
+             * @method marckAses
+             * @desc Removes every student who's not 'pilo'. IF the student is 'pilo' remove href attribute (link to other page)
+             * @param {array} ases 'ases' students to filtrate with the entry from DOM
+             * @return {void}
+             */
+            function marckAses(ases) {
+                $("#user-grades").children().children().each(function () {
+                    if ($(this).attr('data-uid') != undefined) {
+                        if (isAses($(this).attr('data-uid'), ases)) {
+                            $(this).attr('class' , 'ases');
+                        }
+                    }
+                });
+            }
 
 
-            // /**
-            //  * @method isPilo
-            //  * @desc verifies if a student id is in an array of 'pilos'
-            //  * @param {integer} id 
-            //  * @param {array} pilos 
-            //  * @return {boolean} True if the student is 'pilo', false otherwise
-            //  */
-            // function isPilo(id, pilos) {
-            //     for (var i = 0; i < pilos.length; i++) {
-            //         if (pilos[i].split("_")[1] === id) {
-            //             return true;
-            //         }
-            //     }
-            //     return false;
-            // }
+            /**
+             * @method isAses
+             * @desc verifies if a student id is in an array of 'ases'
+             * @param {integer} id 
+             * @param {array} ases 
+             * @return {boolean} True if the student is 'ases', false otherwise
+             */
+            function isAses(id, ases) {
+                for (var i = 0; i < ases.length; i++) {
+                    if (ases[i].split("_")[1] === id) {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
 
-            // /**
-            //  * @method getIDs
-            //  * @desc Returns an array of ids, belonging to students 'pilos'
-            //  * @return {array} array of students id
-            //  */
-            // function getIDs() {
-            //     var pilos = new Array;
-            //     $("#students-pilos").children().each(function () {
-            //         pilos.push($(this).attr("id"));
-            //     });
-            //     return pilos;
-            // }
+            /**
+             * @method getIDs
+             * @desc Returns an array of ids, belonging to students 'ases'
+             * @return {array} array of students id
+             */
+            function getIDs() {
+                var ases = new Array;
+                $("#students-ases").children().each(function () {
+                    ases.push($(this).attr("id"));
+                });
+                return ases;
+            }
+            ////////////////////////////////////////////////////////////////////////////////////////////
 
             /**
              * @method getCourseid
