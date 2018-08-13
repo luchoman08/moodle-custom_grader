@@ -17,7 +17,7 @@
 /**
  * Strings for local plugin 'customgrader', language 'en'
  *
- * @package   customgrader
+ * @package   custom_grader
  * @copyright  2018 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @author    Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>

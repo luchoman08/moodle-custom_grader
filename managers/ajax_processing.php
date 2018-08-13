@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Estrategia ASES
+ * Ajax requests processing
  *
  * @author     Camilo José Cruz Rivera
- * @package    block_ases
+ * @package    custom_grader
  * @copyright  2017 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
