@@ -24,5 +24,5 @@ $plugin->component = 'local_customgrader';
 $plugin->release = '1.0';
 $plugin->version = 2018080302;
 $plugin->requires = 2015030900;
-$plugin->maturity = MATURITY_ALPHA;
+$plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = array();
