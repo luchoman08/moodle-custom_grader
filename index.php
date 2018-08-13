@@ -53,7 +53,7 @@ print_grade_page_head($courseid, 'settings', null, '', false, false, false);
 // print_grade_page_head($courseid, 'settings', 'setup', get_string('gradebooksetup', 'grades'));
 
 echo $OUTPUT->box_start('gradetreebox generalbox');
-$title = get_string('gradebook', 'grades');
+$title = get_string('title', 'local_customgrader');
 
 $info_course = get_categories_global_grade_book($courseid);
 $info_wizard = getCategoriesandItems($courseid);

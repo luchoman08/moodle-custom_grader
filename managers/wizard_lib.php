@@ -23,7 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 require_once $CFG->libdir . '../../lib/gradelib.php';
 require_once $CFG->dirroot . '/grade/lib.php';
 require_once $CFG->dirroot . '/grade/report/user/lib.php';
@@ -32,10 +31,38 @@ require_once $CFG->dirroot . '/grade/report/user/lib.php';
 ///*** Wizard categories methods ***///
 ///*********************************///
 
-
 /** INSERTION METHODS **/
 
 /**
+ *  Insert category using grade core
+ *
+ * @param $father --> category parent
+ * @param $name --> category name
+ * @param $weighted --> type of qualification(aggregation)
+ * @param $weight --> weighetd value
+ * @return integer --- ok->1 || error->0
+ */
+
+function insert_category($course, $father, $name, $weighted, $weight)
+{
+    $params = array(
+        'courseid' => $course,
+        'fullname' => $name,
+        'parent' => $father,
+        'aggregation' => $weighted,
+    );
+
+    $category = grade_category::fetch($params);
+    if($category->insert()){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+/**
+ * Deprecated method Instead use insert_category($params)
+ *
  * It performs the insertion of a category considering whether it is of weighted type or not,
  * then it inserts the item that represents the category. The last one is needed for the category to have a weight.
  *
