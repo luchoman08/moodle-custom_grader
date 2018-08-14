@@ -83,7 +83,7 @@ th{
 
 
 .grid-container {
-  width: 70%;  
+  width: 55%;  
   display: grid;
   grid-template-areas:
     'menu main main main  '
