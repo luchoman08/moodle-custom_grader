@@ -294,8 +294,9 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                 $('.delete').prop('disabled', true);
                 $('.edit').prop('disabled', true);
 
-                var newDiv = $("<div class = 'divForm'>");
+                var newDiv = $("<div class = 'divForm' style= 'display:none'>");
                 newDiv.load("templates/categories_form.html");
+                newDiv.toggle('slow', 'swing');
 
                 var parent = $(this).parent().parent();
                 parent.append('<hr style = "border-top: 1px solid #ddd">');

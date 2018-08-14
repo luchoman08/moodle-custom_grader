@@ -1,4 +1,4 @@
-img.icon{
+#user-grades img.icon{
     display: none !important;
 }
 
@@ -31,6 +31,7 @@ img.icon{
 
 th{
     text-align: left;
+    border-radius: 6px;
 }
 
 #region-main{
