@@ -76,7 +76,8 @@ th{
 }
 
 
-.item2 { grid-area: menu; }
+.item2 { grid-area: menu;
+ }
 .item3 { grid-area: main;}
 .item5 { grid-area: footer; }
 
@@ -87,9 +88,9 @@ th{
   grid-template-areas:
     'menu main main main  '
     'menu footer footer footer  ';
-  grid-gap: 4px;
+  grid-gap: 2px;
   background-color: #d5d5d5;
-  padding: 4px;
+  padding: 2px;
   margin-bottom: 5px;
 }
 .grid-container > div {

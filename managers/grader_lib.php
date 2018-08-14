@@ -37,6 +37,39 @@ require_once $CFG->dirroot . '/grade/report/grader/lib.php';
 ///******************************************///
 
 /**
+ * Returns a string with the teacher from a course.
+ *
+
+ * @see getTeacher($id_curso)
+ * @param $id_curso --> course id
+ * @return string $teacher_name
+ **/
+
+function getTeacher($id_curso)
+{
+    global $DB;
+    $query_teacher = "SELECT concat_ws(' ',firstname,lastname) AS fullname
+    FROM
+      (SELECT usuario.firstname,
+              usuario.lastname,
+              userenrol.timecreated
+       FROM {course} cursoP
+       INNER JOIN {context} cont ON cont.instanceid = cursoP.id
+       INNER JOIN {role_assignments} rol ON cont.id = rol.contextid
+       INNER JOIN {user} usuario ON rol.userid = usuario.id
+       INNER JOIN {enrol} enrole ON cursoP.id = enrole.courseid
+       INNER JOIN {user_enrolments} userenrol ON (enrole.id = userenrol.enrolid
+                                                    AND usuario.id = userenrol.userid)
+       WHERE cont.contextlevel = 50
+         AND rol.roleid = 3
+         AND cursoP.id = $id_curso
+       ORDER BY userenrol.timecreated ASC
+       LIMIT 1) AS subc";
+    $profesor = $DB->get_record_sql($query_teacher);
+    return $profesor->fullname;
+}
+
+/**
  * Returns a string html table with the students, categories and their notes.
  *
 
