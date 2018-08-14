@@ -165,6 +165,8 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
              */
             function bloquearTotales() {
 
+                $('.topleft').attr('colspan', '3');
+
                 $('.cat').each(function () {
                     var input = $(this).children().next('.text');
                     input.attr('disabled', true);

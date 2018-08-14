@@ -37,6 +37,13 @@
   content: "\002b";
 }
 
+.glyphicon-new-window:before {
+  content: "\e164";
+}
+
+.glyphicon-list:before {
+  content: "\e056";
+}
 .level1{
   padding-left: 10px !important;
 }
@@ -161,8 +168,18 @@ margin-top: 30px;
   background: #8cb8e0;
 }
 
+.btn-cats{
+  width: 350px;
+  height: 45px;
+  font-size: 25px;
+  text-align: left;
+  line-height: 25px;
+
+}
+
 .inputValor{
   width: 45px !important;
+  text-align: right;
 }
 
 .divForm{
@@ -170,6 +187,10 @@ margin-top: 30px;
 }
 
 .generaltable th{
-  padding: 2px;
+  padding: 0px;
   line-height: 36px;
+}
+
+tr:hover{
+  background: #888;
 }
