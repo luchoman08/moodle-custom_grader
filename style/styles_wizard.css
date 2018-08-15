@@ -37,6 +37,22 @@
   content: "\002b";
 }
 
+.glyphicon-new-window:before {
+  content: "\e164";
+}
+
+.glyphicon-list:before {
+  content: "\e056";
+}
+
+.glyphicon-edit:before {
+  content: "\e065";
+}
+
+.glyphicon-list{
+  font-size: 40px;
+}
+
 .level1{
   padding-left: 10px !important;
 }
@@ -161,10 +177,31 @@ margin-top: 30px;
   background: #8cb8e0;
 }
 
+.btn-cats{
+  font-weight: bold; 
+  width: 350px;
+  height: 60px;
+  font-size: 25px;
+  text-align: left;
+  line-height: 50px;
+  border-radius: 8px;
+  transition: 0.5s all;
+}
+
 .inputValor{
   width: 45px !important;
+  text-align: right;
 }
 
 .divForm{
   margin-bottom: 54px;
+}
+
+.generaltable th{
+  padding: 0px;
+  line-height: 36px;
+}
+
+*[id*="fixed_user_"]:hover{
+  background: #e5e5e5;
 }

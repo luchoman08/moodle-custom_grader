@@ -545,6 +545,7 @@ function print_table_categories($report)
             if (isset($content) && !isCategoryTotal($content)) {
                 if (isCategory($content)) {
                     $categoryid = explode("_", $id)[1];
+                    $name = getElementName($categoryid,'cat');
                     $weight = getweightofCategory($categoryid);
                     $id_parent = get_id_parent_category($categoryid);
                     if (!$weight || getAggregationofCategory($id_parent) != 10) {
@@ -562,12 +563,13 @@ function print_table_categories($report)
                     }
 
                     if (!isCourseCategorie($categoryid, $report->courseid)) {
-                        $html .= "<$celltype $id $headers class='$class' $colspan style='background: #e5e3e5;'><div id = '$aggregation' class = 'agg'> <i class'glyphicon glyphicon-collapse-down'></i> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' data-maxweight = '$maxweight_parent' id = '$categoryid' class = 'glyphicon btn-wizard glyphicon-pencil edit'/><button title = 'Eliminar Categoría' class = 'glyphicon btn-wizard glyphicon-trash delete'/></div></div></$celltype>\n";
+                        $html .= "<$celltype $id $headers class='$class' $colspan style='background: #e5e3e5;'><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' data-maxweight = '$maxweight_parent' id = '$categoryid' class = 'glyphicon btn-wizard glyphicon-pencil edit'/><button title = 'Eliminar Categoría' class = 'glyphicon btn-wizard glyphicon-trash delete' data-name='$name' /></div></div></$celltype>\n";
                     } else {
                         $html .= "<$celltype $id $headers class='$class' style='background: #dbe9f3;' $colspan><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' id = '$categoryid' class = 'curso glyphicon btn-wizard glyphicon-pencil edit'/></div></div></$celltype>\n";
                     }
                 } else {
                     $id_item = explode("_", $id)[1];
+                    $name = getElementName($id_item,'it');
                     $weight = getweightofItem($id_item);
                     $categoryid = get_id_parent_item($id_item, $report->courseid);
                     if (!$weight || getAggregationofCategory($categoryid) != 10) {
@@ -579,7 +581,7 @@ function print_table_categories($report)
                     if (isItemMod($id_item, $report->courseid)) {
                         $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/></div></div> </$celltype>\n";
                     } else {
-                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/ ' ><button title = 'Eliminar Ítem' class = 'glyphicon btn-wizard glyphicon-trash delete'/></div></div> </$celltype>\n";
+                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/ ' ><button title = 'Eliminar Ítem' class = 'glyphicon btn-wizard glyphicon-trash delete' data-name='$name'/></div></div> </$celltype>\n";
                     }
                 }
             }
@@ -768,6 +770,34 @@ function getweightofCategory($id)
     }
     return false;
 }
+
+/**
+ * Gets element name
+ *
+ * @see getElementName($elementid, $type)
+ * @param $elementid --> element id
+ * @param $type --> 'cat' or 'it'
+ * @return string
+ */
+
+ function getElementName($element, $type)
+ {
+    if($type == 'cat'){
+         $consulta = "SELECT fullname as name from {grade_categories} where id = $element";
+    }elseif($type == 'it'){
+        $consulta = "SELECT itemname as name from {grade_items} where id = $element";
+    }
+     global $DB;
+     
+     $result = $DB->get_record_sql($consulta)->name;
+     
+     
+     return $result;
+ }
+
+
+ 
+
 
 /**
  * Gets a category aggregation value
