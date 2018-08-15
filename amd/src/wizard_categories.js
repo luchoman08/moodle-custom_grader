@@ -243,12 +243,14 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
             $(document).on('click', '.delete', function () {
                 var element = $(this).parent().parent().parent().attr('id').split('_');
                 var courseid = getCourseid();
+                var name = $(this).attr("data-name");
                 var id = element[1];
                 var type = element[0];
                 if (type === 'cat') {
-                    var tipo = "esta categoría";
+                    var tipo = "la categoria: " + name;
                 } else {
-                    var tipo = "este item";
+                    var tipo = "el item: " + name;
+                    
                 }
                 var titulo = "Esta seguro que desea eliminar " + tipo + "?";
                 swal({
