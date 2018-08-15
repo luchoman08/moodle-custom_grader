@@ -782,11 +782,10 @@ function getweightofCategory($id)
  function getElementName($element, $type)
  {
     if($type == 'cat'){
-         $table = 'grade_category';
-         $consulta = "SELECT fullname as name from $table where id = $element";
+         $consulta = "SELECT fullname as name from {grade_categories} where id = $element";
     }elseif($type == 'it'){
         $table = 'grade_items';
-        $consulta = "SELECT itemname as name from $table where id = $element";
+        $consulta = "SELECT itemname as name from {$table} where id = $element";
     }
      global $DB;
      

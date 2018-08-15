@@ -8,7 +8,7 @@
 define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert', 'local_customgrader/jqueryui'], function ($, bootstrap, sweetalert, jqueryui) {
 
     return {
-
+ 
         init: function () {
             var grade;
 
@@ -86,8 +86,8 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                     return true;
                 }
                 // entry pattern, just accept numbers
-                patron = /[0-9]/;
-                tecla_final = String.fromCharCode(tecla);
+                var patron = /[0-9]/;
+                var tecla_final = String.fromCharCode(tecla);
                 return patron.test(tecla_final);
             });
 
