@@ -17,7 +17,6 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                 ////SOLO RAMA UNIVALLE
                 var ases = getIDs();
                 marckAses(ases);
-                
                 ////////////////////////////////////////////////////////////////////////////////////////////
 
                 bloquearTotales();
