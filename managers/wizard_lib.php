@@ -770,6 +770,23 @@ function getweightofCategory($id)
 }
 
 /**
+ * Gets element name
+ *
+ * @see getElementName($elementid, $type)
+ * @param $elementid --> element id
+ * @param $type --> 'cat' or 'it'
+ * @return string
+ */
+
+ function getElement(Type $var = null)
+ {
+     # code...
+ }
+
+
+
+
+/**
  * Gets a category aggregation value
  *
  * @see getAggregationofCategory($categoryid)
