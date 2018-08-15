@@ -57,6 +57,7 @@ $title = get_string('title', 'local_customgrader');
 
 $info_course = get_categories_global_grade_book($courseid);
 $info_wizard = getCategoriesandItems($courseid);
+$docente = getTeacher($courseid);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,6 +82,7 @@ $tpldata->nombre_curso = $course_name;
 $tpldata->info_wizard = $info_wizard;
 $tpldata->table = $info_course;
 $tpldata->students = $students;
+$tpldata->docente = $docente;
 
 echo $OUTPUT->render_from_template('local_customgrader/index', $tpldata);
 

@@ -1,19 +1,31 @@
 <body>
-  <h2>{{title}}</h2>{{{students}}}
-  <button id='wizard_button' type='button' class="btn-pilos">Crear categorias/items</button>
-  <h2>
-    Curso: {{nombre_curso}}
-  </h2>
+    
+  <div class="jumbotron">
+      <h2>{{title}}</h2>
+
+      <div class="grid-container">
+          <div class="item2"><img src="style/img.jpeg" style="width: 95px; height: 95px;"></div>
+          <div class="item3">Curso: {{nombre_curso}}</div>  
+          <div class="item5">Docente: {{docente}}</div>
+      </div>
+  </div>
   <div class="alert alert-error alert-block fade in " role="alert">
     <a class="reload">La calificación total de las categorias no será calculada hasta recargar la página.</a>
   </div>
-  <div class="reload btn btn-primary">
+
+  <button id='wizard_button' type='button' class="btn-cats">Crear categorias/items                     
+    <i class="glyphicon glyphicon-list" style="float: right;"></i>
+  </button>
+
+
+  <div class="reload btn btn-primary act-notas">
+    <i class="glyphicon glyphicon-new-window"></i>
     ACTUALIZAR NOTAS TOTALES
   </div>
+  <hr> {{{table}}}
   <hr>
-  {{{table}}}
-  <hr>
-  <div class="reload btn btn-primary">
+  <div class="reload btn btn-primary act-notas">
+    <i class="glyphicon glyphicon-new-window"></i>
     ACTUALIZAR NOTAS TOTALES
   </div>
   <!-- Modals -->
@@ -22,7 +34,7 @@
   <div class="mymodal" id="modalCategories" role="dialog">
     <div class="mymodal-dialog">
       <!-- Modal content-->
-      <div class="mymodal-content" id="content-create" >
+      <div class="mymodal-content" id="content-create">
         <!-- header -->
         <div class="mymodal-header col-sm-12">
           <div class="col-sm-11">
@@ -43,9 +55,11 @@
 
       <!-- Modal content-->
       <div class="mymodal-content" id="content-edit">
-        <div class="mymodal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 id="titulo">Editar Categoría o Ítem</h4>
+        <div class="mymodal-header col-sm-12">
+          <div class="col-sm-11">
+            <span type="button" class="close" data-dismiss="modal">&times;</span>
+            <h4 id="titulo">Editar Categoría o Ítem</h4>
+          </div>
         </div>
         <div class="mymodal-body">
           <form id="form_editar">
@@ -84,11 +98,11 @@
           </form>
         </div>
         <div class="mymodal-footer">
-          <button type="button" class="button btn btn-primary" id="save_edit">Guardar</button>
-          <button type="button" class="button btn btn-secondary" data-dismiss="modal" id="close_seg">Cancelar</button>
+          <button type="button" class="button btn-wizard " id="save_edit">Guardar</button>
+          <button type="button" class="button btn-wizard " data-dismiss="modal" id="close_seg">Cancelar</button>
         </div>
 
       </div>
     </div>
-    
+
 </body>

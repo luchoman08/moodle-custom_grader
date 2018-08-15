@@ -37,6 +37,13 @@
   content: "\002b";
 }
 
+.glyphicon-new-window:before {
+  content: "\e164";
+}
+
+.glyphicon-list:before {
+  content: "\e056";
+}
 .level1{
   padding-left: 10px !important;
 }
@@ -95,7 +102,7 @@
 
 /* The Close Button */
 .mymodal-close {
-  color: #aaa;
+  color: white;
   float: right;
   font-size: 28px;
   font-weight: bold;
@@ -110,14 +117,14 @@
 
 /* Modal Header */
 .mymodal-header {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
   margin-top: 0px;
+  border-radius: 10px;
   margin-right: 10px;
-  background-color: #D8D8D8;
-  color: black;
+  background-color: #8cb8e2;
+  color: white;
+  height: 40px;
+  padding: 5px 10px;
+
 }
 
 /* Modal Body */
@@ -133,9 +140,6 @@ margin-top: 30px;
   color: black;
 }
 
-#modalCategories .mymodal-header{
-  padding: 5px 10px;
-}
 
 .fondo{
   width: 100%;
@@ -158,4 +162,35 @@ margin-top: 30px;
 }
 #content-create{
   width: 800px;
+}
+
+.btn-wizard{
+  background: #8cb8e0;
+}
+
+.btn-cats{
+  width: 350px;
+  height: 45px;
+  font-size: 25px;
+  text-align: left;
+  line-height: 25px;
+
+}
+
+.inputValor{
+  width: 45px !important;
+  text-align: right;
+}
+
+.divForm{
+  margin-bottom: 54px;
+}
+
+.generaltable th{
+  padding: 0px;
+  line-height: 36px;
+}
+
+tr:hover{
+  background: #888;
 }

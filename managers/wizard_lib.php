@@ -562,9 +562,9 @@ function print_table_categories($report)
                     }
 
                     if (!isCourseCategorie($categoryid, $report->courseid)) {
-                        $html .= "<$celltype $id $headers class='$class' $colspan><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon glyphicon-plus new'/ ><button title = 'Editar Categoría' data-maxweight = '$maxweight_parent' id = '$categoryid' class = 'glyphicon glyphicon-pencil edit'/><button title = 'Eliminar Categoría' class = 'glyphicon glyphicon-trash delete'/></div></div></$celltype>\n";
+                        $html .= "<$celltype $id $headers class='$class' $colspan style='background: #e5e3e5;'><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' data-maxweight = '$maxweight_parent' id = '$categoryid' class = 'glyphicon btn-wizard glyphicon-pencil edit'/><button title = 'Eliminar Categoría' class = 'glyphicon btn-wizard glyphicon-trash delete'/></div></div></$celltype>\n";
                     } else {
-                        $html .= "<$celltype $id $headers class='$class' $colspan><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon glyphicon-plus new'/ ><button title = 'Editar Categoría' id = '$categoryid' class = 'curso glyphicon glyphicon-pencil edit'/></div></div></$celltype>\n";
+                        $html .= "<$celltype $id $headers class='$class' style='background: #dbe9f3;' $colspan><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' id = '$categoryid' class = 'curso glyphicon btn-wizard glyphicon-pencil edit'/></div></div></$celltype>\n";
                     }
                 } else {
                     $id_item = explode("_", $id)[1];
@@ -577,9 +577,9 @@ function print_table_categories($report)
                     }
                     $maxweight = getMaxWeight($categoryid);
                     if (isItemMod($id_item, $report->courseid)) {
-                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon glyphicon-pencil edit'/></div></div> </$celltype>\n";
+                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/></div></div> </$celltype>\n";
                     } else {
-                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon glyphicon-pencil edit'/ ' ><button title = 'Eliminar Ítem' class = 'glyphicon glyphicon-trash delete'/></div></div> </$celltype>\n";
+                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/ ' ><button title = 'Eliminar Ítem' class = 'glyphicon btn-wizard glyphicon-trash delete'/></div></div> </$celltype>\n";
                     }
                 }
             }
