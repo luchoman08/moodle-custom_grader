@@ -301,7 +301,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                 newDiv.toggle('slow', 'swing');
 
                 var parent = $(this).parent().parent();
-                parent.append('<hr style = "border-top: 1px solid #ddd">');
+                parent.append('<hr style = "margin: 6px 0;border-top: 1px solid #ddd">');
                 parent.append(newDiv);
 
                 window.setTimeout(function () {
