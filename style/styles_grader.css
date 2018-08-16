@@ -78,6 +78,14 @@ th{
     transition: 0.5s all;
 }
 
+.act-notas.first{
+    margin-top: 40px;
+}
+
+input{
+    text-align: center;
+}
+
 .act-notas:first-child{
     margin-top: 37px;
 }
