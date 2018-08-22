@@ -153,4 +153,6 @@ th.category{
 tr.heading > th.header{
     background: rgb(214, 222, 229);
 }
-
+.quickfeedback{
+    display: none !important;
+}
