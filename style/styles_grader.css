@@ -2,14 +2,20 @@
     display: none !important;
 }
 
+#user-grades{
+    margin-right: 15px;
+    background: #e6e7e8;
+    border: solid 10px #e6e7e8;
+}
+
 *[id*="grade_"]	{
     width: 50px !important;
 }
 
 .gradeparent{
-    border: solid thin black;
     width: -moz-max-content;    /* Firefox/Gecko */
     width: -webkit-max-content; 
+    margin-right: 50px;
 }
 
 #page-blocks-ases-view-global_grade_book{
@@ -17,7 +23,7 @@
 }
 
 .highlightable{
-    width: 50px;
+    width: 50px !important;
     word-wrap: break-word;
 }
 
@@ -31,11 +37,17 @@
 
 th{
     text-align: center;
-    border-radius: 6px;
+    border-radius: 6px 6px  0 0;
 }
 
 #region-main{
-    margin-left: 60px !important;
+    margin-left: 50px !important;
+}
+
+/*///////////////////////////////////////////////////////////////////////////////////////////*/
+/*SOLO RAMA UNIVALLE*/
+.ases{
+    background: #8ed5b5 !important;
 }
 
 .jumbotron {
@@ -63,12 +75,33 @@ th{
 .act-notas{
     float: right;
     background: #28a965 !important;
+    transition: 0.5s all;
 }
 
-.catlevel1.c1{
+.act-notas.first{
+    margin-top: 40px;
+}
+
+input{
+    text-align: center;
+}
+
+.act-notas:first-child{
+    margin-top: 37px;
+}
+
+.act-notas:hover{
+    color: #333;
+    background: #6fd49e !important;
+    text-decoration: none;
+    background-position: 0 -15px;
+}
+
+.category.catlevel1.cell.c1.lastcol{
     background: #99bcd8;
     font-size: 25px;
     height: 30px;
+    border-bottom: 8px solid #e6e7e8;
 } 
 
 .user{
@@ -98,4 +131,28 @@ th{
   text-align: center;
   padding: 20px 0;
   font-size: 20px;
+}
+
+td.cat, th.categoryitem{
+    border-right: 8px solid;
+    border-color: azure;
+}
+
+td.grade{
+    background: #d5d5d5;
+}
+
+tr.heading > th{
+    background:  rgb(198, 206, 215);;
+    border-radius: 0; 
+}
+
+th.category{
+    background: #b8b6b6
+}
+tr.heading > th.header{
+    background: rgb(214, 222, 229);
+}
+.quickfeedback{
+    display: none !important;
 }

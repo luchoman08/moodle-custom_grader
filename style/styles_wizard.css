@@ -44,6 +44,15 @@
 .glyphicon-list:before {
   content: "\e056";
 }
+
+.glyphicon-edit:before {
+  content: "\e065";
+}
+
+.glyphicon-list{
+  font-size: 40px;
+}
+
 .level1{
   padding-left: 10px !important;
 }
@@ -169,12 +178,14 @@ margin-top: 30px;
 }
 
 .btn-cats{
-  width: 350px;
-  height: 45px;
+  font-weight: bold; 
+  width: 400px;
+  height: 60px;
   font-size: 25px;
   text-align: left;
-  line-height: 25px;
-
+  line-height: 50px;
+  border-radius: 8px;
+  transition: 0.5s all;
 }
 
 .inputValor{
@@ -183,7 +194,9 @@ margin-top: 30px;
 }
 
 .divForm{
-  margin-bottom: 54px;
+  margin-bottom: 50px;
+  margin-right: 8px;
+  transition: 0.5s all;
 }
 
 .generaltable th{

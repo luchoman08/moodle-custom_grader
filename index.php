@@ -59,6 +59,21 @@ $info_course = get_categories_global_grade_book($courseid);
 $info_wizard = getCategoriesandItems($courseid);
 $docente = getTeacher($courseid);
 
+////////////////////////////////////////////////////////////////////////////////////////////
+
+// //SOLO RAMA UNIVALLE
+$info_students = get_info_students($courseid);
+$students = "<div id = 'students-ases' hidden> ";
+foreach($info_students as $student){
+	$code = substr($student->username, 0,7);
+	$id = "idmoodle_".$student->id;
+    $students.="<div id = '$id' data-code = '$code'>  </div>";
+}
+
+$students .= "</div>";
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
 $course_name = $course->fullname;
 
 $tpldata = new stdClass;
@@ -66,6 +81,7 @@ $tpldata->title = $title;
 $tpldata->nombre_curso = $course_name;
 $tpldata->info_wizard = $info_wizard;
 $tpldata->table = $info_course;
+$tpldata->students = $students;
 $tpldata->docente = $docente;
 
 echo $OUTPUT->render_from_template('local_customgrader/index', $tpldata);

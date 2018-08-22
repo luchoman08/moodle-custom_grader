@@ -1,32 +1,24 @@
 <body>
-    
-  <div class="jumbotron">
-      <h2>{{title}}</h2>
+ {{{students}}}
+  
 
-      <div class="grid-container">
-          <div class="item2"><img src="style/img.jpeg" style="width: 95px; height: 95px;"></div>
-          <div class="item3">Curso: {{nombre_curso}}</div>  
-          <div class="item5">Docente: {{docente}}</div>
-      </div>
-  </div>
-  <div class="alert alert-error alert-block fade in " role="alert">
-    <a class="reload">La calificación total de las categorias no será calculada hasta recargar la página.</a>
-  </div>
-
-  <button id='wizard_button' type='button' class="btn-cats">Crear categorias/items                     
+  <button id='wizard_button' type='button' class="btn-cats">Gestionar categorias/items                     
     <i class="glyphicon glyphicon-list" style="float: right;"></i>
   </button>
 
 
-  <div class="reload btn btn-primary act-notas">
-    <i class="glyphicon glyphicon-new-window"></i>
+  <div class="reload btn btn-primary act-notas first">
+    <i class="glyphicon glyphicon-edit"></i>
     ACTUALIZAR NOTAS TOTALES
   </div>
-  <hr> {{{table}}}
-  <hr>
+{{{table}}}
   <div class="reload btn btn-primary act-notas">
-    <i class="glyphicon glyphicon-new-window"></i>
+    <i class="glyphicon glyphicon-edit"></i>
     ACTUALIZAR NOTAS TOTALES
+  </div>
+<hr>
+  <div class="alert alert-error alert-block fade in " role="alert">
+    <a class="reload">La calificación total de las categorias no será calculada hasta recargar la página.</a>
   </div>
   <!-- Modals -->
   <!-- Modal Creacion -->
