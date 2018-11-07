@@ -1,5 +1,18 @@
-#user-grades img.icon{
+#user-grades .icon{
     display: none !important;
+}
+
+#user-grades .action-icon{
+    display: none !important;
+}
+
+#user-grades img.userpicture{
+    display: none;
+}
+
+.act-notas{
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 #user-grades{
