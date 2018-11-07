@@ -1,5 +1,18 @@
-#user-grades img.icon{
+#user-grades .icon{
     display: none !important;
+}
+
+#user-grades .action-icon{
+    display: none !important;
+}
+
+#user-grades img.userpicture{
+    display: none;
+}
+
+.act-notas{
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 #user-grades{
@@ -80,6 +93,31 @@ th{
 
 .act-notas.first{
     margin-top: 40px;
+}
+
+#title-modal-tutorial{
+    font-size: 30px !important;
+}
+
+#tutorial-button{  
+    display: inline-block !important;
+    color: #0070a8 !important;
+    background: white !important;
+}
+
+#tutorialModal{
+    width: 80% !important;
+    margin-left: 100px;
+}
+
+#video-frame{
+    margin-left: -21px;
+    width: 104%;
+}
+
+#close-tutorial{
+    margin-top: -30px !important;
+    font-size: 40px !important;
 }
 
 input{
