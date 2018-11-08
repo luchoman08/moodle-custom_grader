@@ -76,7 +76,9 @@ class custom_grade_report_grader extends grade_report_grader {
                 $item = grade_item::fetch(array('id' => $item_id));
                 /* @var $item_parent_category grade_category */
                 $item_parent_category = $item->get_parent_category();
-                if ($item_parent_category->aggregation == 10) { // if agregation is Weighted mean of grades
+                if (
+                    $item->itemtype !== 'course' && /* Total course grade, always is 0.0% */
+                    $item_parent_category->aggregation == 10) { // if agregation is Weighted mean of grades
                     $agregationcoef = number_format((float)$item->aggregationcoef, 2, '.', '');
                     $item_name_cell->text .= " ($agregationcoef%)";
                 }
