@@ -25,13 +25,14 @@
 
 // Queries from module grades record (registro de notas)
 require_once 'wizard_lib.php';
+require_once (__DIR__ . '/../classes/custom_grade_report_grader.php');
 require_once $CFG->libdir . '/gradelib.php';
 require_once $CFG->dirroot . '/grade/lib.php';
 require_once $CFG->dirroot . '/grade/report/user/lib.php';
 require_once $CFG->dirroot . '/blocks/ases/managers/lib/student_lib.php';
 require_once $CFG->dirroot . '/blocks/ases/managers/lib/lib.php';
 require_once $CFG->dirroot . '/grade/report/grader/lib.php';
-
+require_once $CFG->dirroot . '/grade/edit/tree/lib.php'; //grade_edit_tree
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////SOLO RAMA UNIVALLE
 
@@ -100,6 +101,7 @@ function getTeacher($id_curso)
     return $profesor->fullname;
 }
 
+
 /**
  * Returns a string html table with the students, categories and their notes.
  *
@@ -117,9 +119,8 @@ function get_categories_global_grade_book($id_curso)
     $context = context_course::instance($id_curso);
 
     $gpr = new grade_plugin_return(array('type' => 'report', 'plugin' => 'user', 'courseid' => $id_curso));
-    $report = new grade_report_grader($id_curso, $gpr, $context);
-    // $tabla = $report->get_grade_table();
-    // echo htmlspecialchars($tabla);
+    $report = new custom_grade_report_grader($id_curso, $gpr, $context);
+    $report->get_right_rows(true);
     $report->load_users();
     $report->load_final_grades();
     return $report->get_grade_table();
