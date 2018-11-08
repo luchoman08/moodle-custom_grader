@@ -50,7 +50,7 @@ class custom_grade_report_grader extends grade_report_grader {
                             if ($category_parent->aggregation == 10) { // if agregation is Weighted mean of grades
                                 $category_agregationcoef = $category->get_grade_item()->aggregationcoef;
                                 $agregationcoef = number_format((float)$category_agregationcoef, 2, '.', '');
-                                $category_span->textContent .= "($agregationcoef%)";
+                                $category_span->textContent .= " ($agregationcoef%)";
                                 $category_item_cell->text = $doc->saveHTML();
                             }
 
@@ -78,7 +78,7 @@ class custom_grade_report_grader extends grade_report_grader {
                 $item_parent_category = $item->get_parent_category();
                 if ($item_parent_category->aggregation == 10) { // if agregation is Weighted mean of grades
                     $agregationcoef = number_format((float)$item->aggregationcoef, 2, '.', '');
-                    $item_name_cell->text .= "($agregationcoef%)";
+                    $item_name_cell->text .= " ($agregationcoef%)";
                 }
             }
         }
