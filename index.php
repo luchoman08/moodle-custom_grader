@@ -41,12 +41,18 @@ if (!$course = $DB->get_record('course', array('id' => $courseid))) {
 require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/grade:manage', $context);
+$PAGE->requires->css('/local/customgrader/style/jquery_stickytable.min.css', true);
+
 $PAGE->requires->css('/local/customgrader/style/styles_grader.css', true);
 $PAGE->requires->css('/local/customgrader/style/styles_wizard.css', true);
 $PAGE->requires->css('/local/customgrader/style/sweetalert.css', true);
+$PAGE->requires->css('/local/customgrader/style/overload_crisp_theme.css', true);
+
+$PAGE->requires->jquery();
 
 $PAGE->requires->js_call_amd('local_customgrader/wizard_categories', 'init');
 $PAGE->requires->js_call_amd('local_customgrader/grader', 'init');
+
 
 
 print_grade_page_head($courseid, 'settings', null, '', false, false, false);
@@ -74,6 +80,7 @@ $students .= "</div>";
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 $course_name = $course->fullname;
 
 $tpldata = new stdClass;
@@ -84,9 +91,26 @@ $tpldata->table = $info_course;
 $tpldata->students = $students;
 $tpldata->docente = $docente;
 
-echo $OUTPUT->render_from_template('local_customgrader/index', $tpldata);
+
 
 echo $OUTPUT->box_end();
+echo <<<HTML
+<script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Cells-stickyTable-js/jquery.stickytable.min.js"></script>
+HTML;
+echo $OUTPUT->render_from_template('local_customgrader/index', $tpldata);
+echo <<<HTML
+
+<script>
+
+$('.gradeparent').addClass('sticky-table sticky-headers sticky-ltr-cells');
+$('table').addClass('table table-striped');
+$('tbody > tr ').slice(0,2).addClass('sticky-row');
+$('.heading').addClass('sticky-row');
+$('.heading:first-child').addClass('sticky-cell');
+ $('.header.user.cell.c0').addClass('sticky-cell');
+</script>
+HTML;
+
 
 echo $OUTPUT->footer();
 die;
