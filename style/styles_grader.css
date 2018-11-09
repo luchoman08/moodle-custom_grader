@@ -15,6 +15,7 @@
     margin-bottom: 10px;
 }
 
+
 #user-grades{
     margin-right: 15px;
     background: #e6e7e8;
@@ -30,6 +31,13 @@
     width: -moz-max-content;    /* Firefox/Gecko */
     width: -webkit-max-content; 
     margin-right: 50px;
+    max-width: 115%;
+    max-height: 80vh;
+    overflow: auto;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 0!important
+
 }
 
 #page-blocks-ases-view-global_grade_book{
