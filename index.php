@@ -104,7 +104,13 @@ echo <<<HTML
 
 $('.gradeparent').addClass('sticky-table sticky-headers sticky-ltr-cells');
 $('table').addClass('table table-striped');
-$('tbody > tr ').slice(0,2).addClass('sticky-row');
+$('tbody > tr ').each(function() {
+    if(!$(this)[0].hasAttribute('data-uid')) {
+        $(this).addClass('sticky-row');
+    }
+});
+
+
 $('.heading').addClass('sticky-row');
 $('.heading:first-child').addClass('sticky-cell');
  $('.header.user.cell.c0').addClass('sticky-cell');
