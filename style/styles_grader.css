@@ -93,6 +93,34 @@ input{
     text-align: center;
 }
 
+
+
+#title-modal-tutorial{
+    font-size: 30px !important;
+}
+
+#tutorial-button{
+    display: inline-block !important;
+    color: #0070a8 !important;
+    background: white !important;
+}
+
+#tutorialModal{
+    width: 80% !important;
+    margin-left: 100px;
+}
+
+#video-frame{
+    margin-left: -21px;
+    width: 104%;
+}
+
+#close-tutorial{
+    margin-top: -30px !important;
+    font-size: 40px !important;
+}
+
+
 .act-notas:first-child{
     margin-top: 37px;
 }
