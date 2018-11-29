@@ -41,12 +41,12 @@ if (!$course = $DB->get_record('course', array('id' => $courseid))) {
 require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/grade:manage', $context);
-$PAGE->requires->css('/local/customgrader/style/jquery_stickytable.min.css', true);
 
-$PAGE->requires->css('/local/customgrader/style/styles_grader.css', true);
+$PAGE->requires->css('/local/customgrader/style/jquery_stickytable.min.css', true);
 $PAGE->requires->css('/local/customgrader/style/styles_wizard.css', true);
 $PAGE->requires->css('/local/customgrader/style/sweetalert.css', true);
 $PAGE->requires->css('/local/customgrader/style/overload_crisp_theme.css', true);
+$PAGE->requires->css('/local/customgrader/style/styles_grader.css', true);
 
 $PAGE->requires->jquery();
 

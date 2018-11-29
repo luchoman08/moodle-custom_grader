@@ -19,7 +19,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                 marckAses(ases);
                 $('#wizard_button, #tutorial-button').click(function() {
                     $('.gradeparent').removeClass('sticky-table sticky-headers sticky-ltr-cells');
-                    $('table').removeClass('table table-striped');
+                    //$('table').removeClass('table table-striped');
                     $('tbody > tr ').each(function() {
                         if(!$(this)[0].hasAttribute('data-uid')) {
                             $(this).removeClass('sticky-row');
@@ -41,18 +41,6 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                     $('.heading:first-child').addClass('sticky-cell');
                     $('.header.user.cell.c0').addClass('sticky-cell');
                 });
-                /*$('.mymodal-close').click(function() {
-                    $('.gradeparent').addClass('sticky-table sticky-headers sticky-ltr-cells');
-                    $('table').addClass('table table-striped');
-                    $('tbody > tr ').each(function() {
-                        if(!$(this)[0].hasAttribute('data-uid')) {
-                            $(this).addClass('sticky-row');
-                        }
-                    });
-                    $('.heading').addClass('sticky-row');
-                    $('.heading:first-child').addClass('sticky-cell');
-                    $('.header.user.cell.c0').addClass('sticky-cell');
-                });*/
                 ////////////////////////////////////////////////////////////////////////////////////////////
 
                 bloquearTotales();
