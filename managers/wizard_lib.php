@@ -482,7 +482,6 @@ function getCategoriesandItems($courseid)
     $report = new grade_report_user($courseid, $gpr, $context, $userid);
     reduce_table_categories($report);
     if ($report->fill_table()) {
-        //print_r($report->courseid);
         return print_table_categories($report);
     }
 }
