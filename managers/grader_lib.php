@@ -24,6 +24,7 @@
  */
 
 // Queries from module grades record (registro de notas)
+require_once (__DIR__ . '/../../../config.php');
 require_once 'wizard_lib.php';
 require_once (__DIR__ . '/../classes/custom_grade_report_grader.php');
 require_once $CFG->libdir . '/gradelib.php';
@@ -187,3 +188,4 @@ function update_grades_moodle($userid, $itemid, $finalgrade, $courseid)
     }
 
 }
+
