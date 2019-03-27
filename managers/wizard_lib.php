@@ -31,6 +31,9 @@ require_once $CFG->dirroot . '/grade/report/user/lib.php';
 ///*** Wizard categories methods ***///
 ///*********************************///
 
+const CATEGORY_ELEMENT = 'cat';
+const ITEM_ELEMENT = 'row';
+
 /** INSERTION METHODS **/
 
 /**
@@ -183,7 +186,6 @@ function insertParcial($course, $father, $name, $weighted, $weight)
 function insertItem($course, $father, $name, $valsend, $item)
 {
     global $DB;
-
     //Instance an object item to use insert_record
     if ($item) {
         $object = new stdClass;
@@ -207,11 +209,7 @@ function insertItem($course, $father, $name, $valsend, $item)
 
     $succes = $DB->insert_record('grade_items', $object);
 
-    if ($succes) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return $succes !== false;
 
 }
 
@@ -228,7 +226,7 @@ function insertItem($course, $father, $name, $valsend, $item)
  * @param $aggregation --> qualification type id
  * @return boolean true if category and item were both updated, false otherwise
  */
-function edit_category($courseid, $categoryid, $weight, $name, $parentid, $aggregation, $course_cat)
+function edit_category($courseid, $categoryid, $aggregationcoef, $name, $parentid, $aggregation, $course_cat)
 {
     if ($grade_category = grade_category::fetch(array('id' => $categoryid, 'courseid' => $courseid))) {
 
@@ -248,8 +246,8 @@ function edit_category($courseid, $categoryid, $weight, $name, $parentid, $aggre
 
             if ($parent_category->aggregation != 10) {
                 $grade_item->aggregationcoef = 0;
-            } else if ($grade_item->aggregationcoef != $weight) {
-                $grade_item->aggregationcoef = $weight;
+            } else if ($grade_item->aggregationcoef != $aggregationcoef) {
+                $grade_item->aggregationcoef = $aggregationcoef;
             }
 
             if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == 10) {
@@ -334,7 +332,7 @@ function edit_category($courseid, $categoryid, $weight, $name, $parentid, $aggre
  * @param $parentid --> parent id
  * @return boolean true if grade item was updated, false otherwise
  */
-function edit_item($courseid, $itemid, $weight, $name, $parentid)
+function edit_item($courseid, $itemid, $aggregationcoef, $name, $parentid)
 {
     if ($grade_item = grade_item::fetch(array('id' => $itemid, 'courseid' => $courseid))) {
 
@@ -349,8 +347,8 @@ function edit_item($courseid, $itemid, $weight, $name, $parentid)
         $parent_category = $grade_item->get_parent_category();
         if ($parent_category->aggregation != 10) {
             $grade_item->aggregationcoef = 0;
-        } else if ($grade_item->aggregationcoef != $weight) {
-            $grade_item->aggregationcoef = $weight;
+        } else if ($grade_item->aggregationcoef != $aggregationcoef) {
+            $grade_item->aggregationcoef = $aggregationcoef;
         }
 
         if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == 10) {
@@ -370,32 +368,55 @@ function edit_item($courseid, $itemid, $weight, $name, $parentid)
 }
 
 /**
- * Edits an element given an array with some specifications, including course id, element id and element aggregation.
- *
- * @see editElement($info)
- * @param $info --> indexed-array with the new element information
- * @return boolean true if the update operation was succesful, false otherwise
+ * Edit category
+ * @param grade_category $category
+ * @return bool|grade_category
  */
-function editElement($info)
-{
+function editCategory($category) {
+    $edited =  edit_category(
+        $category->courseid,
+        $category->id,
+        $category->aggregationcoef,
+        $category->fullname,
+        $category->parent_category,
+        $category->aggregation,
+        $category->courseid);
+    if ( $edited ) {
+        return grade_category::fetch(array('id'=>$category->id));
+    } else {
+        return false;
+    }
+}
 
-    $type = $info['type_e'];
-    $courseid = $info['course'];
-    $elementid = $info['element'];
-    $weight = $info['newPeso'];
-    $name = $info['newNombre'];
-    $aggregation = $info['newCalific'];
-    $parentid = $info['parent'];
-    $curso = $info['curso'];
-
-    if ($type == 'it') {
-        return edit_item($courseid, $elementid, $weight, $name, $parentid);
-    } elseif ($type == 'cat') {
-        return edit_category($courseid, $elementid, $weight, $name, $parentid, $aggregation, $curso);
+/**
+ * Edit item
+ * @param grade_item $item
+ * @return bool|grade_item
+ */
+function editItem($item) {
+    $edited =  edit_item(
+        $item->courseid,
+        $item->id,
+        $item->aggregationcoef,
+        $item->itemname,
+        $item->categoryid);
+    if ( $edited ) {
+        return grade_item::fetch(array('id'=>$item->id));
+    } else {
+        return false;
     }
 }
 
 /** DELETING METHODS **/
+
+
+function delete_item($item_id, $courseid) {
+    return delete_element($item_id, $courseid, ITEM_ELEMENT);
+}
+function delete_category($category_id, $courseid) {
+    return delete_element($category_id, $courseid, CATEGORY_ELEMENT);
+}
+
 
 /**
  * Deletes an element of grading. (item or category)

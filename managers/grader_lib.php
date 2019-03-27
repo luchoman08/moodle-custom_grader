@@ -22,12 +22,13 @@
  * @copyright  2018 Camilo José Cruz Rivera <cruz.camilo@correounivalle.edu.co>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 // Queries from module grades record (registro de notas)
 require_once (__DIR__ . '/../../../config.php');
+global $CFG;
 require_once 'wizard_lib.php';
 require_once (__DIR__ . '/../classes/custom_grade_report_grader.php');
 require_once $CFG->libdir . '/gradelib.php';
+require_once $CFG->libdir . '/datalib.php';
 require_once $CFG->dirroot . '/grade/lib.php';
 require_once $CFG->dirroot . '/grade/report/user/lib.php';
 require_once $CFG->dirroot . '/blocks/ases/managers/lib/student_lib.php';
@@ -102,6 +103,24 @@ function getTeacher($id_curso)
     return $profesor->fullname;
 }
 
+/**
+ * Return the grade report for a given course id
+ * @param $course_id
+ * @return custom_grade_report_grader
+ */
+function get_grade_report($course_id) {
+    global $USER;
+    $USER->gradeediting[$course_id] = 1;
+
+    $context = context_course::instance($course_id);
+
+    $gpr = new grade_plugin_return(array('type' => 'report', 'plugin' => 'user', 'courseid' => $course_id));
+    $report = new custom_grade_report_grader($course_id, $gpr, $context);
+    $report->get_right_rows(true);
+    $report->load_users();
+    $report->load_final_grades();
+    return $report;
+}
 
 /**
  * Returns a string html table with the students, categories and their notes.
@@ -114,17 +133,8 @@ function getTeacher($id_curso)
 function get_categories_global_grade_book($id_curso)
 {
 
-    global $USER;
-    $USER->gradeediting[$id_curso] = 1;
-
-    $context = context_course::instance($id_curso);
-
-    $gpr = new grade_plugin_return(array('type' => 'report', 'plugin' => 'user', 'courseid' => $id_curso));
-    $report = new custom_grade_report_grader($id_curso, $gpr, $context);
-    $report->get_right_rows(true);
-    $report->load_users();
-    $report->load_final_grades();
-    return $report->get_grade_table();
+    $grade_book = get_grade_report($id_curso);
+    return $grade_book->get_grade_table();
 }
 
 ///**********************************///
@@ -149,10 +159,59 @@ function update_grade_items_by_course($course_id)
             $item->regrading_finished();
         }
     }
-
     return '1';
 }
 
+class GraderInfo {
+    public $course;
+    public $items;
+    public $students;
+    public $categories;
+    public $grades;
+    public $levels;
+}
+
+/**
+ * Return all info of grades in a course normalized
+ * @param $courseid
+ * @param bool $fillers
+ * @return GraderInfo
+ * @throws dml_exception
+ */
+function get_normalized_all_grade_info($courseid){
+
+    $grade_info = new GraderInfo();
+    $grade_tree_fills  = new grade_tree($courseid, true, true);
+    $grade_report = get_grade_report($courseid);
+    $grade_tree = new grade_tree($courseid, false);
+    $items = $grade_tree->items;
+    $categories = \grade_category::fetch_all(array('courseid'=>$courseid));
+    $students =  $grade_report->users;
+    $student_grades = $grade_report->get_all_grades();
+    $course = get_course($courseid);
+    $grade_info->course = $course;
+    $grade_info->items = array_values($items);
+    $grade_info->categories = _append_category_grade_item(array_values($categories));
+    $grade_info->students = array_values($students);
+    $grade_info->levels = $grade_tree_fills->get_levels();
+    $grade_info->grades = array_values($student_grades);
+    return $grade_info;
+
+}
+function _append_category_grade_item(array $categories): array {
+    $_categories = [];
+    /** @var grade_category $category */
+    foreach($categories as $category) {
+        $_category = (array) $category;
+        $_category['grade_item'] = $category->get_grade_item();
+        array_push($_categories, $_category);
+    }
+    return $_categories;
+}
+function get_table_levels($courseid, $fillers = true, $category_grade_last=true){
+    $grade_tree = new grade_tree($courseid, $fillers, $category_grade_last);
+    return $grade_tree->get_levels();
+}
 //update_grade_items_by_course(9);
 
 /**
@@ -187,5 +246,28 @@ function update_grades_moodle($userid, $itemid, $finalgrade, $courseid)
         return $resp;
     }
 
+}
+
+/**
+ * Updates grades from a student
+ *
+
+ * @see update_grades_moodle($userid, $itemid, $finalgrade,$courseid)
+ * @param $userid --> user id
+ * @param $item --> item id
+ * @param $finalgrade --> grade value
+ * @param $courseid --> course id
+ *
+ * @return bool Return true if the grade exist and was updated, false otherwise
+
+ */
+
+function update_grades_moodle_($userid, $itemid, $finalgrade, $courseid)
+{
+    if (!$grade_item = grade_item::fetch(array('id' => $itemid, 'courseid' => $courseid))) { // we must verify course id here!
+        return false;
+    }
+    $updated  = $grade_item->update_final_grade($userid, $finalgrade, 'gradebook', false, FORMAT_MOODLE);
+    return $updated;
 }
 

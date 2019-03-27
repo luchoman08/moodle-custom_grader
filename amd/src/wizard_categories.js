@@ -6,7 +6,11 @@
 * @license  http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
-define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap', 'local_customgrader/jqueryui'], function ($, __sweet_alert) {
+define([
+    'jquery',
+   /* 'local_customgrader/sweetalert',
+    'local_customgrader/bootstrap',
+    'local_customgrader/jqueryui'*/], function ($, __sweet_alert) {
     var CONFIRMATION_BUTTON_COLOR = "#d51b23";
     var ELEMENT_TYPES = {
         CATEGORY : 'cat',
@@ -296,7 +300,7 @@ define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap
      */
     function validateDataIt(aggregation) {
         var nombre = $.trim($('#inputNombre').val());
-        if (nombre == '') {
+        if (nombre === '') {
             swal({
                 title: "Ingrese el nombre del ítem que desea crear",
                 html: true,
@@ -305,9 +309,9 @@ define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap
             });
             return false;
         }
-        if (aggregation == 10) {
+        if (aggregation === 10) {
             var peso = $('#inputValor').val();
-            if (peso == '') {
+            if (peso === '') {
                 swal({
                     title: "Ingrese un peso válido entre 0 y " + maxweight,
                     html: true,
@@ -329,7 +333,7 @@ define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap
      */
     function validateDataParcial(aggregation) {
         var nombre = $.trim($('#inputNombre').val());
-        if (nombre == '') {
+        if (nombre === '') {
             swal({
                 title: "Ingrese el nombre del parcial que desea crear",
                 html: true,
@@ -338,7 +342,7 @@ define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap
             });
             return false;
         }
-        if (aggregation == 10) {
+        if (aggregation === 10) {
             var peso = $('#inputValor').val();
             if (peso == '') {
                 swal({
@@ -483,11 +487,17 @@ define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap
             });
     };
 
-
+    var get_add_element_form = function () {
+        var newDiv = $("<div class = 'divForm' style= 'display:none'>");
+        newDiv.load("templates/categories_form.html");
+        newDiv.toggle('slow', 'swing');
+        return newDiv;
+    };
 
     return {
         deleteElement: deleteElement,
         getCourseId: getCourseId,
+        get_add_element_form: get_add_element_form,
         show_delete_element_dialog: show_delete_element_dialog,
         ELEMENT_TYPES: ELEMENT_TYPES,
         init: function () {
@@ -763,13 +773,12 @@ define(['jquery', 'local_customgrader/sweetalert', 'local_customgrader/bootstrap
                 $('.delete').prop('disabled', true);
                 $('.edit').prop('disabled', true);
 
-                var newDiv = $("<div class = 'divForm' style= 'display:none'>");
-                newDiv.load("templates/categories_form.html");
-                newDiv.toggle('slow', 'swing');
+
 
                 var parent = $(this).parent().parent();
                 parent.append('<hr style = "margin: 6px 0;border-top: 1px solid #ddd">');
-                parent.append(newDiv);
+                var add_element_form = get_add_element_form();
+                parent.append(add_element_form);
 
                 window.setTimeout(function () {
 

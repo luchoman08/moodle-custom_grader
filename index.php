@@ -37,7 +37,8 @@ $PAGE->set_pagelayout('admin');
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('invalidcourseid');
 }
-
+//$grade_info = json_encode(get_normalized_all_grade_info($course->id));
+//print_r($grade_info);die;
 require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/grade:manage', $context);
@@ -94,9 +95,7 @@ $tpldata->docente = $docente;
 
 
 echo $OUTPUT->box_end();
-echo <<<HTML
-<script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Cells-stickyTable-js/jquery.stickytable.min.js"></script>
-HTML;
+
 echo $OUTPUT->render_from_template('local_customgrader/index', $tpldata);
 echo <<<HTML
 

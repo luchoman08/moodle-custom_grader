@@ -70,6 +70,12 @@ if (isset($_POST['course']) && isset($_POST['parent']) && isset($_POST['fullname
 
 }
 
+if (isset($_POST['course']) && isset($_POST['type']) && $_POST['type'] == "getAllGraderInfoNormalized") {
+
+    $data = get_normalized_all_grade_info($_POST['course']);
+    echo json_encode($data);
+}
+
 if (isset($_POST['course']) && isset($_POST['type']) && $_POST['type'] == "loadCat") {
 
     $cursos = getCategoriesandItems($_POST['course']);
