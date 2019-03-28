@@ -113,7 +113,7 @@ abstract class Validable {
     public function add_error($error, $fieldname = Validable::GENERIC_ERRORS_FIELD, $error_data = null ) {
         $error_ = $error;
         if(is_string($error)) {
-            $error_ = new Error(-1, $error, $error_data);
+            $error_ = new AsesError(-1, $error, $error_data);
         }
         array_push($this->_errors, $error);
 
