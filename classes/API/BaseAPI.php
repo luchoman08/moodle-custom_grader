@@ -105,6 +105,17 @@ class BaseAPI  extends Validable {
             throw(new Error('The end point element at get function in base api should be a closure or an instance of BaseAPIView'));
         }
     }
+    function put($path_format_or_func_name, $endpoint_element) {
+        // $this->add_function(new APIFunction($path_format_or_func_name, $function, 'POST'));
+        if(is_object($endpoint_element) && ($endpoint_element instanceof Closure)) {
+            $this->add_function(new APIFunction($path_format_or_func_name, $endpoint_element, 'PUT'));
+        } elseif (is_subclass_of($endpoint_element, BaseAPIView::class)) {
+            $function = BaseAPI::view_class_to_function($endpoint_element);
+            $this->add_function(new APIFunction($path_format_or_func_name, $function, 'PUT'));
+        } else {
+            throw(new Error('The end point element at get function in base api should be a closure or an instance of BaseAPIView'));
+        }
+    }
     public function send_errors() {
         http_response_code(404);
         header('Content-Type: application/json');
@@ -119,7 +130,6 @@ class BaseAPI  extends Validable {
     private function init_params() {
         global $_POST;
         $this->params = (array)json_decode(file_get_contents('php://input'));
-
         if(!$this->params || !$this->params != '') {
             $this->params = (array)$_POST;
         }
@@ -149,6 +159,7 @@ class BaseAPI  extends Validable {
     function run() {
         global $_SERVER;
         $method = $_SERVER['REQUEST_METHOD'];
+
         $path_info = $_SERVER['PATH_INFO'];
 
         $this->init_params();
