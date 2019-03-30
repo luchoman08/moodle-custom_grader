@@ -3,10 +3,12 @@
 require_once(__DIR__ . '/../classes/API/BaseAPI.php');
 require_once(__DIR__ . '/api_views.php');
 $api = new BaseAPI();
-$api->get('get_normalized_grade_data/:courseid', GetNormalizedGraderData::class);
-$api->post('update_grade', UpdateGrade::class);
-$api->post('update_item', UpdateItem::class);
-$api->post('update_category', UpdateCategory::class);
-$api->delete(':course_id/item/:item_id', DeleteItem::class);
-$api->delete(':course_id/item/:category', DeleteCategory::class);
+$api->get('/grader/:courseid', GetNormalizedGraderData::class);
+$api->put('/grade', UpdateGrade::class);
+$api->put('/category', UpdateCategory::class);
+$api->put('/item', UpdateItem::class);
+//$api->post('/category', AddCategory::class);
+$api->post('/item', AddItem::class);
+$api->delete('/item/:item_id', DeleteItem::class);
+$api->delete('/item/:category_id', DeleteCategory::class);
 $api->run();

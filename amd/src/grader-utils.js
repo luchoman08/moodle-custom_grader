@@ -7,6 +7,19 @@ define([], function () {
             return value.toString();
         }
     };
+    var ID = function () {
+        // Math.random should be unique because of its seeding algorithm.
+        // Convert it to base 36 (numbers + letters), and grab the first 9 characters
+        // after the decimal.
+        return '_' + Math.random().toString(36).substr(2, 9);
+    };
+    var orderGradeIdsInItemSetOrder = function (gradeIds, gradesObject, itemsOrderedIds) {
+        return gradeIds.sort(function(gradeIdA, gradeIdB) {
+            const itemIdA = gradesObject[gradeIdA].itemid;
+            const itemIdB = gradesObject[gradeIdB].itemid;
+            return itemsOrderedIds.indexOf(itemIdA) - itemsOrderedIds.indexOf(itemIdB);
+        });
+    };
     var getCourseId = function() {
         var informacionUrl = window.location.search.split("=");
         var curso = -1;
@@ -19,6 +32,8 @@ define([], function () {
     };
     return {
         removeInsignificantTrailZeros: removeInsignificantTrailZeros,
-        getCourseId: getCourseId
+        getCourseId: getCourseId,
+        ID: ID,
+        orderGradeIdsInItemSetOrder: orderGradeIdsInItemSetOrder
     };
 });

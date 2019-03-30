@@ -16,7 +16,7 @@ $PAGE->requires->css('/local/customgrader/style/vue-js-modal.css');
 $PAGE->requires->css('/local/customgrader/style/font-awesome.css');
 $PAGE->requires->css('/local/customgrader/style/vue-flex.css', true);
 $PAGE->requires->css('/local/customgrader/style/vue-toasted.css', true);
-
+$PAGE->requires->css('/local/customgrader/style/styles_grader.css', true);
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_customgrader/grader.vue', null);
 

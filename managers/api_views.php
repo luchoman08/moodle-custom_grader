@@ -1,6 +1,7 @@
 <?php
 require_once (__DIR__ . '/../classes/API/BaseAPIView.php');
 require_once (__DIR__ . '/../managers/grader_lib.php');
+require_once (__DIR__ . '/../managers/wizard_lib.php');
 require_once (__DIR__ . '/../classes/Errors/CustomError.php');
 
 class GetNormalizedGraderData extends BaseAPIView {
@@ -45,15 +46,47 @@ Class UpdateItem extends BaseAPIView {
             'item', // type of grade_category
         ];
     }
+
     public function send_response() {
         /** @var  $item grade_item */
         $item = $this->data['item'];
         $editedItemResponse =  editItem($item);
+        update_grade_items_by_course( $this->data['courseid']);
         $levels = get_table_levels($item->courseid);
+
         $response = [
             'item' => $editedItemResponse,
-            'levels' => $levels
+            'levels' => $levels,
+            'other_grades'=> get_student_grades($this->data['courseid'])
             ];
+        return $response;
+    }
+}
+
+/**
+ * Class AddItem
+ * Required item properties are:
+ * - courseid
+ * - parent_category
+ * - itemname
+ * - aggregationcoef
+ */
+class AddItem extends BaseAPIView {
+    public function get_required_data(): array {
+        return ['item'];
+    }
+    public function send_response() {
+        /** @var  $item grade_item */
+        $item = $this->data['item'];
+        $item_or_false = insertItem($item->courseid, $item->parent_category, $item->itemname, $item->aggregationcoef, true );
+        if ($item_or_false !== true) {
+            $item = grade_item::fetch(array('id'=>$item_or_false));
+        }
+        $levels = get_table_levels($item->courseid);
+        $response = [
+            'levels'=>$levels,
+            'item'=>$item,
+        ];
         return $response;
     }
 }
@@ -61,7 +94,8 @@ Class UpdateItem extends BaseAPIView {
 class DeleteItem extends BaseAPIView {
     public function send_response() {
         $item_id = $this->args['item_id'];
-        $course_id= $this->args['course_id'];
+        $item = grade_item::fetch(array('id'=>$item_id));
+        $course_id =  $item->courseid;
         $deleted = delete_item($item_id, $course_id);
         $levels = get_table_levels($course_id);
         $response = [
@@ -79,9 +113,10 @@ class DeleteCategory extends BaseAPIView {
         ];
     }
     public function send_response() {
-        $category_id = $this->data['categoryId'];
-        $course_id= $this->data['courseId'];
-        $deleted = delete_item($category_id, $course_id);
+        $category_id = $this->data['category_id'];
+        $category = grade_category::fetch(array('id'=>$category_id));
+        $course_id= $category->courseid;
+        $deleted = delete_category($category_id, $course_id);
         $levels = get_table_levels($course_id);
         $response = [
             'levels' => $levels
@@ -104,11 +139,15 @@ class UpdateGrade extends BaseAPIView {
 
         $userid = $this->data['userid'];
         $itemid =  $this->data['itemid'];
+        update_grade_items_by_course( $this->data['courseid']);
         if(!update_grades_moodle_($userid ,$itemid, $this->data['finalgrade'], $this->data['courseid'])) {
             $this->add_error(new CustomError(-1, 'No se ha podido actualizar la nota'));
             return false;
         } else {
-            return grade_grade::fetch(array('userid'=>$userid , 'itemid'=>$itemid));
+            return array(
+                'grade'=> grade_grade::fetch(array('userid'=>$userid , 'itemid'=>$itemid)),
+                'other_grades'=> get_student_grades($this->data['courseid'], $itemid, $userid)
+            );
         }
 
     }

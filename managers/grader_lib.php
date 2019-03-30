@@ -37,7 +37,7 @@ require_once $CFG->dirroot . '/grade/report/grader/lib.php';
 require_once $CFG->dirroot . '/grade/edit/tree/lib.php'; //grade_edit_tree
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////SOLO RAMA UNIVALLE
-
+use \local_customgrader\custom_grade_category;
 /**
  * Gets course information given its id
  * @see get_info_students($id_curso)
@@ -108,7 +108,7 @@ function getTeacher($id_curso)
  * @param $course_id
  * @return custom_grade_report_grader
  */
-function get_grade_report($course_id) {
+function get_grade_report($course_id,  $load_final_grades=true, $load_users=true) {
     global $USER;
     $USER->gradeediting[$course_id] = 1;
 
@@ -117,8 +117,8 @@ function get_grade_report($course_id) {
     $gpr = new grade_plugin_return(array('type' => 'report', 'plugin' => 'user', 'courseid' => $course_id));
     $report = new custom_grade_report_grader($course_id, $gpr, $context);
     $report->get_right_rows(true);
-    $report->load_users();
-    $report->load_final_grades();
+    if($load_users) $report->load_users();
+    if($load_final_grades) $report->load_final_grades();
     return $report;
 }
 
@@ -185,28 +185,225 @@ function get_normalized_all_grade_info($courseid){
     $grade_report = get_grade_report($courseid);
     $grade_tree = new grade_tree($courseid, false);
     $items = $grade_tree->items;
-    $categories = \grade_category::fetch_all(array('courseid'=>$courseid));
+    $categories = custom_grade_category::fetch_all(array('courseid'=>$courseid));
     $students =  $grade_report->users;
     $student_grades = $grade_report->get_all_grades();
     $course = get_course($courseid);
     $grade_info->course = $course;
     $grade_info->items = array_values($items);
-    $grade_info->categories = _append_category_grade_item(array_values($categories));
+    $grade_info->categories = array_values($categories);
     $grade_info->students = array_values($students);
     $grade_info->levels = $grade_tree_fills->get_levels();
     $grade_info->grades = array_values($student_grades);
     return $grade_info;
 
 }
-function _append_category_grade_item(array $categories): array {
-    $_categories = [];
-    /** @var grade_category $category */
-    foreach($categories as $category) {
-        $_category = (array) $category;
-        $_category['grade_item'] = $category->get_grade_item();
-        array_push($_categories, $_category);
+
+/**
+ * Get student grades for a course
+ * @param $courseid number
+ * @return array List of student grades for a course
+ */
+function get_student_grades($courseid, $itemid=null, $userid=null){
+    $grade_report = get_grade_report($courseid, false);
+    $student_grades = $grade_report->get_all_grades($itemid, $userid);
+    return array_values($student_grades);
+}
+/**
+ * Get student grades for a item
+ * @param $course_id number
+ * @param $item_id number
+ * @return array List of student grades for a course
+ * @throws dml_exception
+ */
+function get_student_grades_for_item($course_id, $item_id){
+    $grade_report = get_grade_report($course_id, false);
+    $student_grades = $grade_report->get_all_grades($item_id);
+    return array_values($student_grades);
+}
+
+/**
+ * It performs the insertion of 'parcial'
+ *
+ * @param $course --> course id
+ * @param $father --> category parent
+ * @param $name --> category name
+ * @param $weighted --> type of qualification(aggregation)
+ * @param $weight --> weighted value
+ * @return integer --- ok-> 1 || error-> 0
+ **/
+function insertParcial($course, $father, $name, $weighted, $weight)
+{
+    $succes = insertCategoryParcial($course, $father, $name, $weighted, $weight);
+    if ($succes != 0) {
+        if (insertItem($course, $succes, $name, 0, true) == 1) {
+            if (insertItem($course, $succes, "Opcional de " . $name, 0, true) == 1) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
     }
-    return $_categories;
+}
+
+/**
+ * Performs the insertion of a category 'parcial'. Returns the id  the created category if it's successful, 0 otherwise
+ *
+ * @see insertCategoryParcial($course,$father,$name,$weighted,$weight)
+ * @param $course --> course id
+ * @param $father --> category parent
+ * @param $name --> category name
+ * @param $weighted --> type of qualification(aggregation)
+ * @param $weight --> weighted value
+ * @return integer --- ok->id_cat || error->0
+ **/
+function insertCategoryParcial($course, $father, $name, $weighted, $weight)
+{
+    global $DB;
+
+    //Instance an object category to use insert_record
+    $object = new stdClass;
+    $object->courseid = $course;
+    $object->fullname = $name;
+    $object->parent = $father;
+    $object->aggregation = $weighted;
+    $object->timecreated = time();
+    $object->timemodified = $object->timecreated;
+    $object->aggregateonlygraded = 0;
+    $object->aggregateoutcomes = 0;
+
+    $succes = $DB->insert_record('grade_categories', $object);
+
+    if ($succes) {
+        if (insertItem($course, $succes, $name, $weight, false) === 1) {
+            return $succes;
+        } else {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Edit category
+ * @param grade_category $category
+ * @return bool|grade_category
+ */
+function editCategory($category) {
+    $edited =  edit_category(
+        $category->courseid,
+        $category->id,
+        $category->aggregationcoef,
+        $category->fullname,
+        $category->parent_category,
+        $category->aggregation,
+        $category->courseid);
+    if ( $edited ) {
+        return custom_grade_category::fetch(array('id'=>$category->id));
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Deprecated method Instead use insert_category($params)
+ *
+ * It performs the insertion of a category considering whether it is of weighted type or not,
+ * then it inserts the item that represents the category. The last one is needed for the category to have a weight.
+ *
+ * @param $course --> course id
+ * @param $father --> category parent
+ * @param $name --> category name
+ * @param $weighted --> type of qualification(aggregation)
+ * @param $weight --> weighetd value
+ * @return integer --- ok->1 || error->0
+ **/
+
+function insertCategory($course, $father, $name, $weighted, $weight)
+{
+    global $DB;
+
+    //Instance a category object to use insert_record
+    $object = new stdClass;
+    $object->courseid = $course;
+    $object->fullname = $name;
+    $object->parent = $father;
+    $object->aggregation = $weighted;
+    $object->timecreated = time();
+    $object->timemodified = $object->timecreated;
+    $object->aggregateonlygraded = 0;
+    $object->aggregateoutcomes = 0;
+
+    $succes = $DB->insert_record('grade_categories', $object);
+
+    if ($succes) {
+        if (insertItem($course, $succes, $name, $weight, false) === 1) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+/**
+ * Inserts an item, either flat item or an item related to a category, the last one is needed to assign a weight in case the category were a
+ * daughter of another category with weighted rating
+ *
+ * @see insertItem($course,$father,$name,$valsend,$item)
+ * @param $course --> course id
+ * @param $father --> category parent
+ * @param $name --> category name
+ * @param $aggregationcoef --> $aggregationcoef value
+ * @param $item --> Item that'll be added
+ * @return bool|int true or new id
+ * @throws dml_exception
+ */
+function insertItem($course, $father, $name, $aggregationcoef, $item)
+{
+    global $DB;
+    //Instance an object item to use insert_record
+    if ($item) {
+        $object = new stdClass;
+        $object->courseid = $course;
+        $object->categoryid = $father;
+        $object->itemname = $name;
+        $object->itemnumber = 0;
+        $object->itemtype = 'manual';
+        $object->sortorder = getNextIndex($course);
+        $object->aggregationcoef = $aggregationcoef;
+        $object->grademax = 5;
+    } else {
+        $object = new stdClass;
+        $object->courseid = $course;
+        $object->itemtype = 'category';
+        $object->sortorder = getNextIndex($course);
+        $object->aggregationcoef = $aggregationcoef;
+        $object->iteminstance = $father;
+        $object->grademax = 5;
+    }
+
+    return $DB->insert_record('grade_items', $object);
+}
+
+
+/**
+ * @param $category grade_category
+ * @return $category object
+ */
+function _append_category_grade_item($category) {
+    $_category = (object) $category;
+    $category_item =  $category->get_grade_item();
+    $_category->grade_item = $category_item->id;
+    return $_category;
+}
+function _append_category_grade_item_for_array(array $categories): array {
+    return array_map(function($c) {return _append_category_grade_item($c);}, $categories);
 }
 function get_table_levels($courseid, $fillers = true, $category_grade_last=true){
     $grade_tree = new grade_tree($courseid, $fillers, $category_grade_last);

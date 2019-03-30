@@ -33,7 +33,8 @@ require_once $CFG->dirroot . '/grade/report/user/lib.php';
 
 const CATEGORY_ELEMENT = 'cat';
 const ITEM_ELEMENT = 'row';
-
+const PROMEDIO_PONDERADO = 10;
+const PROMEDIO_SIMPLE = 1;
 /** INSERTION METHODS **/
 
 /**
@@ -63,155 +64,11 @@ function insert_category($course, $father, $name, $weighted, $weight)
     }
 }
 
-/**
- * Deprecated method Instead use insert_category($params)
- *
- * It performs the insertion of a category considering whether it is of weighted type or not,
- * then it inserts the item that represents the category. The last one is needed for the category to have a weight.
- *
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $weighted --> type of qualification(aggregation)
- * @param $weight --> weighetd value
- * @return integer --- ok->1 || error->0
- **/
 
-function insertCategory($course, $father, $name, $weighted, $weight)
-{
-    global $DB;
 
-    //Instance a category object to use insert_record
-    $object = new stdClass;
-    $object->courseid = $course;
-    $object->fullname = $name;
-    $object->parent = $father;
-    $object->aggregation = $weighted;
-    $object->timecreated = time();
-    $object->timemodified = $object->timecreated;
-    $object->aggregateonlygraded = 0;
-    $object->aggregateoutcomes = 0;
 
-    $succes = $DB->insert_record('grade_categories', $object);
 
-    if ($succes) {
-        if (insertItem($course, $succes, $name, $weight, false) === 1) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    return 0;
-}
 
-/**
- * Performs the insertion of a category 'parcial'. Returns the id  the created category if it's successful, 0 otherwise
- *
- * @see insertCategoryParcial($course,$father,$name,$weighted,$weight)
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $weighted --> type of qualification(aggregation)
- * @param $weight --> weighted value
- * @return integer --- ok->id_cat || error->0
- **/
-function insertCategoryParcial($course, $father, $name, $weighted, $weight)
-{
-    global $DB;
-
-    //Instance an object category to use insert_record
-    $object = new stdClass;
-    $object->courseid = $course;
-    $object->fullname = $name;
-    $object->parent = $father;
-    $object->aggregation = $weighted;
-    $object->timecreated = time();
-    $object->timemodified = $object->timecreated;
-    $object->aggregateonlygraded = 0;
-    $object->aggregateoutcomes = 0;
-
-    $succes = $DB->insert_record('grade_categories', $object);
-
-    if ($succes) {
-        if (insertItem($course, $succes, $name, $weight, false) === 1) {
-            return $succes;
-        } else {
-            return 0;
-        }
-    }
-
-    return 0;
-}
-
-/**
- * It performs the insertion of 'parcial'
- *
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $weighted --> type of qualification(aggregation)
- * @param $weight --> weighted value
- * @return integer --- ok-> 1 || error-> 0
- **/
-function insertParcial($course, $father, $name, $weighted, $weight)
-{
-    $succes = insertCategoryParcial($course, $father, $name, $weighted, $weight);
-    if ($succes != 0) {
-        if (insertItem($course, $succes, $name, 0, true) == 1) {
-            if (insertItem($course, $succes, "Opcional de " . $name, 0, true) == 1) {
-                return 1;
-            } else {
-                return 0;
-            }
-        } else {
-            return 0;
-        }
-    } else {
-        return 0;
-    }
-}
-
-/**
- * Inserts an item, either flat item or an item related to a category, the last one is needed to assign a weight in case the category were a
- * daughter of another category with weighted rating
- *
- * @see insertItem($course,$father,$name,$valsend,$item)
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $valsend --> category value
- * @param $item --> Item that'll be added
- * @return integer --- ok-> 1 || error-> 0
- */
-function insertItem($course, $father, $name, $valsend, $item)
-{
-    global $DB;
-    //Instance an object item to use insert_record
-    if ($item) {
-        $object = new stdClass;
-        $object->courseid = $course;
-        $object->categoryid = $father;
-        $object->itemname = $name;
-        $object->itemnumber = 0;
-        $object->itemtype = 'manual';
-        $object->sortorder = getNextIndex($course);
-        $object->aggregationcoef = $valsend;
-        $object->grademax = 5;
-    } else {
-        $object = new stdClass;
-        $object->courseid = $course;
-        $object->itemtype = 'category';
-        $object->sortorder = getNextIndex($course);
-        $object->aggregationcoef = $valsend;
-        $object->iteminstance = $father;
-        $object->grademax = 5;
-    }
-
-    $succes = $DB->insert_record('grade_items', $object);
-
-    return $succes !== false;
-
-}
 
 /** EDITING METHODS **/
 
@@ -327,7 +184,7 @@ function edit_category($courseid, $categoryid, $aggregationcoef, $name, $parenti
  * @see edit_item($courseid, $itemid, $weight, $name, $parentid)
  * @param $courseid --> course id
  * @param $itemid --> item id
- * @param $weight --> weighted value
+ * @param $aggregationcoef --> weighted value
  * @param $name --> item name
  * @param $parentid --> parent id
  * @return boolean true if grade item was updated, false otherwise
@@ -345,13 +202,13 @@ function edit_item($courseid, $itemid, $aggregationcoef, $name, $parentid)
         }
 
         $parent_category = $grade_item->get_parent_category();
-        if ($parent_category->aggregation != 10) {
+        if ($grade_item->itemtype != 'category' && $parent_category->aggregation != PROMEDIO_PONDERADO) {
             $grade_item->aggregationcoef = 0;
         } else if ($grade_item->aggregationcoef != $aggregationcoef) {
             $grade_item->aggregationcoef = $aggregationcoef;
         }
 
-        if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == 10) {
+        if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == PROMEDIO_PONDERADO) {
             $grade_item->aggregationcoef = 1;
         }
 
@@ -367,26 +224,6 @@ function edit_item($courseid, $itemid, $aggregationcoef, $name, $parentid)
     }
 }
 
-/**
- * Edit category
- * @param grade_category $category
- * @return bool|grade_category
- */
-function editCategory($category) {
-    $edited =  edit_category(
-        $category->courseid,
-        $category->id,
-        $category->aggregationcoef,
-        $category->fullname,
-        $category->parent_category,
-        $category->aggregation,
-        $category->courseid);
-    if ( $edited ) {
-        return grade_category::fetch(array('id'=>$category->id));
-    } else {
-        return false;
-    }
-}
 
 /**
  * Edit item
@@ -401,7 +238,8 @@ function editItem($item) {
         $item->itemname,
         $item->categoryid);
     if ( $edited ) {
-        return grade_item::fetch(array('id'=>$item->id));
+        $_item = grade_item::fetch(array('id'=>$item->id));
+        return $_item;
     } else {
         return false;
     }

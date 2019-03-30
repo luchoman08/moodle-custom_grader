@@ -8,11 +8,16 @@ define([], function() {
         PROMEDIO: 10
     };
     var sortStudentMethods = {
-        NAME: 'name',
+        FIRST_NAME: 'firstname',
         LAST_NAME: 'lastname'
+    };
+    var sortDirection = {
+        ASC: 'asc',
+        DESC: 'desc'
     };
     return {
         aggregations: aggregations,
-        sortStudentMethods: sortStudentMethods
+        sortStudentMethods: sortStudentMethods,
+        sortDirection: sortDirection
     };
 });

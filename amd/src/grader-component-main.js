@@ -5,7 +5,7 @@ define([
 ], function (Vuex, g_enums, g_store) {
     var template = `
             <div>
-                <table v-if="students.length > 0" id="user-grades" class="gradereport-grader-table table table-striped">
+                <table v-if="students.length > 0" id="user-grades" class="gradereport-grader-table table">
                     <tbody>
                         <!-- COURSE_TR -->
                         <tr class="GridViewScrollHeader" >
@@ -34,7 +34,12 @@ define([
                         </tr>
                         <!-- END OF CATEGORIES_TRS-->
                         <TrItems>  </TrItems>
-                        <TrGrades v-for="(student, index) in students" v-bind:studentId="student.id" v-bind:studentIndex="index" :key="student.id"></TrGrades>
+                        <TrGrades 
+                        v-for="(student, index) in students" 
+                        v-bind:studentId="student.id" 
+                        v-bind:studentIndex="index" 
+                        :key="student.id"
+                        ></TrGrades>
                     </tbody>
                 </table>
                 <div v-else>
@@ -62,6 +67,7 @@ define([
                 'itemsCount',
                 'getCategoriesByDepth',
                 'categoryLevels',
+                'studentSetSorted',
                 'itemLevel',
                 'courseLevel'
             ]),
@@ -72,7 +78,7 @@ define([
                 return this.additionalColumnsAtEnd.length;
             },
             students: function() {
-                return this.$store.getters.studentSetSorted(g_enums.sortStudentMethods.NAME);
+                return this.studentSetSorted;
             },
             gradeHeaderColspan: function () {
                 return Number(this.courseLevel.colspan) + this.additionalColumnsAtFirstLength + this.additionalColumnsAtEndLength;

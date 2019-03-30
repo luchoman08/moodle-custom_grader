@@ -41,7 +41,7 @@ abstract class BaseAPIView extends Validable {
         foreach($required_params as $required_param) {
 
             if(!array_key_exists($required_param, $this->data)) {
-                $field_error = FieldValidationErrorFactory::required_field_is_empty( array('field'=>$required_param));
+                $field_error = FieldValidationErrorFactory::required_field_is_empty( array('field'=>$required_param, 'data'=>$this->data));
                 $this->add_error($field_error, $required_param);
                 $valid = false;
             }
