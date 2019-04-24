@@ -17,7 +17,7 @@ define([
                 .catch(response => console.error(response))
         },
         post: (resource, data) => {
-            var data_ = {
+            const data_ = {
                 ...data,
                 course: COURSE_ID
             };
@@ -27,7 +27,7 @@ define([
                 .catch(response => console.error(response));
         },
         put: (resource, data) => {
-            var data_ = {
+            const data_ = {
                 ...data,
                 course: COURSE_ID
             };
@@ -42,26 +42,26 @@ define([
            return api_service.get(`grader/${courseId}`);
        },
        update_grade: (grade, courseId) => {
-           var send_info = {...grade, courseid: courseId};
+           const send_info = {...grade, courseid: courseId};
            return api_service.put('grade', send_info);
        },
        update_category: (category) => {
-           var send_info = { category: category};
+           const send_info = { category: category};
            console.log(send_info, 'send info at category update');
            return api_service.put('category', send_info);
        },
-       add_category: (category) => {
-           var send_info = { category: category};
-           console.log(send_info, 'send info at item creation');
+       add_category: (category, weight) => {
+           const send_info = { category: category, weight: weight};
+           console.log(send_info, 'send info at category creation');
            return api_service.post('category', send_info);
        },
        add_item: (item) => {
-           var send_info = { item: item };
+           const send_info = { item: item };
            console.log(send_info, 'send info at item creation');
            return api_service.post('item', send_info);
        },
        update_item: (item) => {
-           var send_info = { item: item };
+           const send_info = { item: item };
            return api_service.put('item', send_info);
        },
        delete_item: (itemId) => {

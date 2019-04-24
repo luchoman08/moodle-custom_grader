@@ -22,10 +22,13 @@ define([
                             <th v-bind:colspan="additionalColumnsAtFirstLength"></th>
                             <template v-for="(element, index) in categoryLevel">
                                 <th v-if="element.type==='fillerfirst'" colspan="1"></th>
-                                <ThCategory v-if="element.type === 'category' " v-bind:colspan="element.colspan" v-bind:element="element">
+                                <th-category v-if="element.type === 'category' " v-bind:colspan="element.colspan" v-bind:element="element">
                                    
-                                </ThCategory>
-                                <td v-if="element.type === 'filler' || element.type === 'fillerlast'" v-bind:colspan="element.colspan"></td>
+                                </th-category>
+                                <td 
+                                v-if="element.type === 'filler' || element.type === 'fillerlast'" 
+                                v-bind:colspan="element.colspan"
+                                ></td>
 
                             </template>
                             <th v-bind:colspan="additionalColumnsAtEndLength"></th>
@@ -33,21 +36,21 @@ define([
 
                         </tr>
                         <!-- END OF CATEGORIES_TRS-->
-                        <TrItems>  </TrItems>
-                        <TrGrades 
+                        <tr-items>  </tr-items>
+                        <tr-grades 
                         v-for="(student, index) in students" 
                         v-bind:studentId="student.id" 
                         v-bind:studentIndex="index" 
                         :key="student.id"
-                        ></TrGrades>
+                        ></tr-grades>
                     </tbody>
                 </table>
                 <div v-else>
                     Cargando información...
                 </div>
                 <div id="modals">
-                    <ModalEditCategory></ModalEditCategory>
-                    <ModalAddElement></ModalAddElement>
+                    <modal-edit-category></modal-edit-category>
+                    <modal-add-element></modal-add-element>
                 </div>
                 <v-dialog/>
             </div>

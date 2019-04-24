@@ -101,6 +101,7 @@ define([
     'local_customgrader/grader-component-main',
     'local_customgrader/grader-router',
     'local_customgrader/grader-filters',
+    'local_customgrader/grader-constants',
     ], function (
         Vue,
         VueRouter,
@@ -116,7 +117,8 @@ define([
         g_utils,
         g_c_main,
         g_router,
-        g_filters){
+        g_filters,
+        g_const){
     Vue.use(VueRouter);
     Vue.use(Vuex);
     Vue.use(VueResource);
@@ -140,8 +142,37 @@ define([
     const elementTypes = [categoryElement, itemElement, partialElement];
 
     var store = new Vuex.Store(g_store.store);
-
-    var EditCategoryForm = Vue.component('EditCategoryForm', {
+    var SelectAggregation = Vue.component('select-aggregation', {
+        template: `
+            <select 
+            v-model="aggregation" 
+            @change="changeAggregation($event)" 
+            id="aggregation">
+                <option 
+                v-for="_aggregation in aggregations"
+                v-bind:selected="_aggregation.id == aggregation"
+                v-bind:value="_aggregation.id"
+                >{{_aggregation.name}}</option>
+            </select>
+        `,
+        props: ['initialAggregation'],
+        data: function () {
+            return {
+                aggregation: g_enums.aggregations.SIMPLE,
+                aggregations: g_const.aggregations
+            }
+        },
+        created: function () {
+            this.aggregation = this.initialAggregation? this.initialAggregation: this.aggregation;
+            console.log(this.initialAggregation, 'first aggregation after select mounted');
+        },
+        methods: {
+            changeAggregation($event) {
+                this.$emit('changeAggregation', $event.target.value);
+            }
+        }
+    });
+    var EditCategoryForm = Vue.component('edit-category-form', {
             // language=HTML
             template: `                
                     <form>
@@ -153,11 +184,10 @@ define([
                             <label for="aggregation">
                             Tipo de calificación
                             </label>
-                            <select v-model="aggregation" id="aggregation">
-                                <option 
-                                        v-for="aggregation in aggregations"
-                                        v-bind:value="aggregation.id">{{aggregation.name}}</option>
-                            </select>
+                            <select-aggregation 
+                                    v-bind:initialAggregation="category.aggregation"
+                                    v-on:changeAggregation="changeAggregation">
+                            </select-aggregation>
                             <button type="button" v-on:click="updateCategory">Guardar</button>
                     </form>
             `
@@ -166,29 +196,36 @@ define([
                 return {
                     categoryFullName: '',
                     gradeTypeId: 0,
-                    aggregation: g_enums.aggregations.PROMEDIO
+                    aggregations: g_const.aggregations
                 }
         },
         computed: {
-            ...Vuex.mapState(['aggregations', 'selectedCategoryId']),
+            ...Vuex.mapState(['selectedCategoryId']),
             ...Vuex.mapGetters({
                 category: 'selectedCategory'
             }),
         },
         mounted: function () {
           this.categoryFullName = this.category.fullname;
+
           this.aggregation = this.category.aggregation;
         },
         methods: {
+                setAggretation(aggregation) {
+                  this.aggregation = aggregation;
+                },
+                changeAggregation(aggregation) {
+                    console.log(aggregation, 'change aggregation at edit category form');
+                    this.aggregation = aggregation;
+                },
                 updateCategory() {
                     this.$store.dispatch(
                         g_store.actions.UPDATE_CATEGORY,
                         {
                             ...this.category,
-                                fullname: this.categoryFullName,
-                                aggregation: this.aggregation,
-                                aggregationcoef: 50
-
+                            fullname: this.categoryFullName,
+                            aggregation: this.aggregation,
+                            aggregationcoef: 50
                         })
                         .then(()=> {
                             this.$emit(graderVueEvents.UPDATE_CATEGORY_OK);
@@ -200,7 +237,7 @@ define([
         }
         }
         );
-    var CloseModalButton = Vue.component('CloseModalButton', {
+    var CloseModalButton = Vue.component('close-modal-button', {
         template: `
         <i class="fa fa-2x fa-times-circle" v-bind:style="closeButtonStyle"  @click="$modal.hide(modalName)"></i>
         `,
@@ -220,15 +257,15 @@ define([
             }
         }
     });
-        var ModalAddElement = Vue.component('ModalAddElement', {
+    var ModalAddElement = Vue.component('modal-add-element', {
             template: `
        <modal 
         v-bind:name="modalName"
         v-bind:transition="'nice-modal-fade'"
         :draggable="true"
         >
-            <AddElementForm v-on:addElementOK="$modal.hide(modalName)"></AddElementForm>
-            <CloseModalButton v-bind:modalName="modalName"></CloseModalButton>
+            <add-element-form v-on:addElementOK="$modal.hide(modalName)"></add-element-form>
+            <close-modal-button v-bind:modalName="modalName"></close-modal-button>
        </modal>
        `,
         data: function() {
@@ -237,14 +274,14 @@ define([
                 }
         }
         });
-    var ModalEditCategory = Vue.component('ModalEditCategory',{
+    var ModalEditCategory = Vue.component('modal-edit-category',{
        template: `<modal
                     v-bind:name="modalName" 
                     v-bind:transition="'nice-modal-fade'"
                     :draggable="true"
                     >
-                        <EditCategoryForm   v-on:updateCategoryOK="$modal.hide(modalName)"></EditCategoryForm>
-                        <CloseModalButton v-bind:modalName="modalName"></CloseModalButton>
+                        <edit-category-form   v-on:updateCategoryOK="$modal.hide(modalName)"></edit-category-form>
+                        <close-modal-button v-bind:modalName="modalName"></close-modal-button>
                    </modal>
        `,
         data: function () {
@@ -254,7 +291,7 @@ define([
         }
     });
 
-    var AddElementForm = Vue.component('AddElementForm',{
+    var AddElementForm = Vue.component('add-element-form',{
        template: `
         
        <form>
@@ -271,9 +308,20 @@ define([
         <input id="elementName" v-model="elementName">
         <template v-if="parentCategory.aggregation == weigthedMeanOfGrades">
             <label for="elementAggregationCoef">
-            Peso 
-        </label>
-        <input placeholder="Ingrese un valor entre 1 y 100" id="elementAggregationCoef" v-model="elementAggregationCoef" type="number">
+                Peso 
+            </label>
+                    <input 
+        placeholder="Ingrese un valor entre 1 y 100" 
+        id="elementAggregationCoef" 
+        v-model="elementAggregationCoef" type="number">
+        </template>
+        <template v-if="elementTypeId === categoryElementTypeId">
+            <label >
+                Tipo de agregación
+            </label>
+            <select-aggregation
+                v-bind:changeAggregation="changeAggregation"
+            />
         </template>
        <button type="button" v-on:click="createElement()">Añadir</button>
        </form>
@@ -281,8 +329,10 @@ define([
         data : function () {
            return {
                elementTypes: elementTypes,
+               categoryElementTypeId: categoryElement.id,
                elementTypeId: itemElement.id,
                elementName: '',
+               aggregation: g_enums.aggregations.SIMPLE,
                elementAggregationCoef: ''
            }
         },
@@ -297,58 +347,90 @@ define([
             }
         },
         methods: {
+           changeAggregation(aggregation) {
+             this.aggregation = aggregation;
+           },
+            extractItem() {
+               return {
+                   itemname: this.elementName,
+                   aggregationcoef: this.elementAggregationCoef,
+                   parent_category: this.parentCategory.id,
+                   courseid: this.course.id,
+               };
+            },
+            extractCategory() {
+              return {
+                fullname: this.elementName,
+                courseid: this.course.id,
+                parent_category: this.parentCategory.id,
+                aggregation: this.aggregation
+              };
+            },
+            createItem() {
+                const item = this.extractItem();
+                this.$store.dispatch(g_store.actions.ADD_ITEM, item)
+                    .then(()=> {
+                        this.$emit(graderVueEvents.ADD_ELEMENT_OK);
+                        this.$toasted.show(
+                            `Se ha añadido el item '${item.itemname}'`,
+                            { duration : 3000, icon: 'fa fa-check'});
+                    })
+                    .catch(() => {
+                        this.$toasted.show(
+                            'Ha ocurrido un error guardando el nuevo item.',
+                            {duration: 3000, theme: 'bubble'}
+                        )
+                    })
+            },
+            createCategory() {
+              const category = this.extractCategory();
+              const payload = {category, weight: this.elementAggregationCoef};
+              this.$store.dispatch(g_store.actions.ADD_CATEGORY, payload)
+                  .then(()=>{
+                      this.$emit(graderVueEvents.ADD_ELEMENT_OK);
+                      this.$toasted.show(
+                          `Se ha añadido la categoria '${category.fullname}'`,
+                          { duration : 3000, icon: 'fa fa-check'});
+                  })
+                  .catch(() => {
+                      this.$toasted.show(
+                          'Ha ocurrido un error guardando la nueva categoria.',
+                          {duration: 3000, theme: 'bubble'}
+                      )
+                  })
+            },
            createElement() {
                if (this.elementTypeId === itemElement.id) {
-                   const item = {
-                       itemname: this.elementName,
-                       aggregationcoef: this.elementAggregationCoef,
-                       parent_category: this.parentCategory.id,
-                       courseid: this.course.id,
-                   };
-                   this.$store.dispatch(g_store.actions.ADD_ITEM, item)
-                       .then(()=> {
-                           this.$emit(graderVueEvents.ADD_ELEMENT_OK);
-                           this.$toasted.show(
-                               `Se ha añadido el item '${item.itemname}'`,
-                               { duration : 3000, icon: 'fa fa-check'});
-                       })
-                       .catch(() => {
-                           this.$toasted.show(
-                               'Ha ocurrido un error guardando la nueva categoria.',
-                               {duration: 3000, theme: 'bubble'}
-                           )
-                       })
+                    this.createItem();
+               } else if(this.elementTypeId === categoryElement.id) {
+                   this.createCategory();
                }
            }
         }
 
     });
-
-
-
-        var ItemMiniMenuEdit = Vue.component('ItemMiniMenuEdit', {
-                template: `
+    var ItemMiniMenuEdit = Vue.component('item-mini-menu-edit', {
+        template: `
                 <div>
                     <i class="fa fa-trash" v-on:click="deleteItem()"></i>
                 </div>
             `,
-                props: ['itemId'],
-                methods: {
-                    deleteItem() {
-                        loading_indicator.show();
-                        this.$store.dispatch(g_store.actions.DELETE_ITEM, this.itemId)
-                            .then(()=>loading_indicator.hide());
-
+            props: ['itemId'],
+            methods: {
+                deleteItem() {
+                    loading_indicator.show();
+                    this.$store.dispatch(g_store.actions.DELETE_ITEM, this.itemId)
+                        .then(()=>loading_indicator.hide());
                     }
                 }
             }
         );
-    var CategoryMiniMenuEdit = Vue.component('CategoryMiniMenuEdit', {
+    var CategoryMiniMenuEdit = Vue.component('category-mini-menu-edit', {
             template: `
                 <div v-bind:style="style">
                     <i class="fa fa-edit" v-on:click="showEditDialog"></i>
                     <i class="fa fa-plus" v-on:click="showAddElementDialog"></i>
-                    <i class="fa fa-trash"></i>
+                    <i class="fa fa-trash" v-on:click="showDeleteElementDialog"></i>
                 </div>
             `,
         props: ['categoryId'],
@@ -370,6 +452,34 @@ define([
                 },
         },
         methods: {
+            deleteCategory(){
+              return this.$store.dispatch(g_store.actions.DELETE_CATEGORY, this.categoryId)
+                  .then(()=> {
+                      this.$toasted.show('Se ha borrado la categoria', {duration: 3000});
+                  })
+                  .catch(()=> {
+                      this.$toasted.
+                      show('Ha habido un error al borrar la categoria, no se ha borrado', {duration: 3000, theme:'bubble'});
+                  });
+            },
+            showDeleteElementDialog() {
+                this.$modal.show('dialog', {
+                    title: 'Eliminación de categoria',
+                    text: 'Estas a punto de eliminar una categoria',
+                    buttons: [
+                        {
+                            title: 'Borrar',
+                            handler: () => {
+                                this.deleteCategory()
+                                    .finally(()=>this.$modal.hide('dialog'));
+                            }
+                        },
+                        {
+                            title: 'Cancelar'
+                        }
+                    ]
+                })
+            },
             showEditDialog() {
                 this.$store.commit(
                     g_store.mutations.SET_SELECTED_CATEGORY_ID,
@@ -385,27 +495,26 @@ define([
         }
         }
         );
-    var ThCategory = Vue.component('ThCategory', {
+    var ThCategory = Vue.component('th-category', {
        template : `    
-
-                    <th 
-                    @mouseover="showMenuItems = true"
-                    @mouseout="showMenuItems = false" 
-                    style="background-color: gray;" 
-                    v-bind:colspan="childSize" 
-                    class="category">
-                        <flex-row align-v="center"  v-bind:style="editZoneStyles">
-                           
-                            <editable :content="category.fullname" @update="updateCategoryName"></editable>
-                            <editable 
-                            :sufix="'%'" 
-                            @update="saveAggregationCoef($event)"
-                            :content="aggregationCoef | round(2)" 
-                            v-if="parentCategory.aggregation == weightedAggregation"
-                            ></editable>
-                            <CategoryMiniMenuEdit v-bind:categoryId="category.id" v-show="showMenuItems"></CategoryMiniMenuEdit>
-                        </flex-row>
-                    </th>
+            <th 
+            @mouseover="showMenuItems = true"
+            @mouseout="showMenuItems = false" 
+            style="background-color: gray;" 
+            v-bind:colspan="childSize" 
+            class="category">
+                <flex-row align-v="center"  v-bind:style="editZoneStyles">
+                   
+                    <editable :content="category.fullname" @update="updateCategoryName"></editable>
+                    <editable 
+                    :sufix="'%'" 
+                    @update="saveAggregationCoef($event)"
+                    :content="aggregationCoef | round(2)" 
+                    v-if="parentCategory.aggregation == weightedAggregation"
+                    ></editable>
+                    <category-mini-menu-edit v-bind:categoryId="category.id" v-show="showMenuItems"></category-mini-menu-edit>
+                </flex-row>
+            </th>
        `,
         props: ['element'],
         data: function() {
@@ -463,7 +572,7 @@ define([
            }
     });
 
-    var ItemActionsMini = Vue.component('ItemActionsMini', {
+    var ItemActionsMini = Vue.component('item-actions-mini', {
         template:`
         
         `,
@@ -514,16 +623,16 @@ define([
                     <th-student-names></th-student-names>
                     <th colspan="1" v-for="additionalColumnAtFirst in additionalColumnsAtFirst" v-show="!additionalColumnAtFirst.hide">{{additionalColumnAtFirst.text}}</th>
                     <template v-for="itemId, index) in orderedItemIds">       
-                        <ThItemCategory 
+                        <th-item-category 
                         v-if="items[itemId].itemtype === 'category'" 
                         v-bind:itemId="items[itemId].id" 
                         v-bind:colspan="1"
-                        ></ThItemCategory> 
+                        ></th-item-category> 
                         
-                        <ThItemManualAndMod 
+                        <th-item-manual-and-mod 
                         v-if="items[itemId].itemtype === 'manual' || items[itemId].itemtype === 'mod'"  
                         v-bind:itemId="items[itemId].id" 
-                        ></ThItemManualAndMod>
+                        ></th-item-manual-and-mod>
                      </template>
                      <th colspan="1" v-for="additionalColumnAtEnd in additionalColumnsAtEnd">{{additionalColumnAtEnd.text}}</th>
                      </tr>
@@ -552,21 +661,21 @@ define([
             }
         });
 
-        var ThItemManualAndMod = Vue.component('ThItemManualAndMod', {
+        var ThItemManualAndMod = Vue.component('th-item-manual-and-mod', {
             template : `         
                 <th v-cloak
                  @mouseover="showMenuItems = true"
                  @mouseout="showMenuItems = false"
                 ><!--v-on:click="deleteItem(item.id)"-->
                 <flex-row v-bind:style="editZoneStyles" align-v="center">
-                    <editable :content="item.itemname"  @update="saveNameChanges($event)"></editable>
+                    <editable :content="item.itemname" @update="saveNameChanges($event)"></editable>
                     <editable
                      :sufix="'%'"
                      :content="item.aggregationcoef | round(2)" 
                      @update="saveAggregationCoefChanges($event)" 
                      v-if="parentCategory.aggregation == weightedAggregation"
                      ></editable>
-                    <ItemMiniMenuEdit v-show="showMenuItems" v-bind:itemId="item.id"></ItemMiniMenuEdit>
+                    <item-mini-menu-edit v-show="showMenuItems" v-bind:itemId="item.id"></item-mini-menu-edit>
                 </flex-row>
                 </th>
    `,       data: function () {
@@ -619,7 +728,7 @@ define([
             }
         });
 
-        var ThItemCategory = Vue.component('ThItemCategory', {
+        var ThItemCategory = Vue.component('th-item-category', {
             template : `         
                 <th v-bind:colspan="colspan" >
                             {{itemName}}
@@ -645,7 +754,7 @@ define([
             },
         });
 
-        var ThStudent = Vue.component('ThStudent',
+        var ThStudent = Vue.component('th-student',
             {
                 // language=HTML
                 template: `
@@ -670,7 +779,7 @@ define([
                     }
                 }
             });
-        var TdGrade = Vue.component('TdGrade',
+        var TdGrade = Vue.component('td-grade',
             {
                template: `
                 <td  > 
@@ -716,23 +825,23 @@ define([
                 }
 
             });
-        var TrGrades = Vue.component('TrGrades',
+        var TrGrades = Vue.component('tr-grades',
             {
                 template: `
                 <tr 
                 v-bind:class="{is_ases: student.is_ases}" 
                 v-bind:title="student.is_ases? 'El estudiante pertenece al programa ASES' : ''"
                 >
-                    <ThStudent v-bind:studentId="student.id"></ThStudent>
+                    <th-student v-bind:studentId="student.id"></th-student>
                     <td >{{student.username}}</td>
-                    <TdGrade 
+                    <td-grade 
                     v-for="(gradeId, index) in studentGradeIdsOrdered" 
                     :key="gradeId"
                     v-bind:studentIndex="studentIndex"
                     v-bind:itemIndex="index"
                     v-bind:gradeId="gradeId"
                     >
-                    </TdGrade>
+                    </td-grade>
                    
                 </tr>
                 `,

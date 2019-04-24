@@ -11,16 +11,6 @@ define([
     const columnStudentNames= {text: "", hide: true};
 
 
-    var aggregations = [
-        {
-            id: g_enums.aggregations.SIMPLE,
-            name: "Promedio Simple"
-        },
-        {
-            id: g_enums.aggregations.PROMEDIO,
-            name: "Promedio Ponderado"
-        }
-    ];
     /**
      * Return an array of students sorted
      * @param sortStudentMethodType
@@ -36,19 +26,21 @@ define([
         }
     };
     var mutationsType = {
-        SET_STATE: 'setAllState',
         ADD_GRADE: 'addGrade',
+        DELETE_CATEGORY: 'deleteCategory',
+        ADD_ITEM: 'addItem',
+        ADD_CATEGORY: 'addCategory',
+        ADD_GRADE_TO_STUDENT: 'addGradeToStudent',
+        SET_STATE: 'setAllState',
         SET_GRADE: 'setGrade',
         SET_GRADES: 'setGrades',
         SET_CATEGORY: 'setCategory',
         SET_STUDENT_SORT_METHOD: 'setStudentSortMethod',
+        SET_SELECTED_CATEGORY_ID: 'setSelectedCategoryId',
         SET_LEVELS: 'setLevels',
         SET_ITEM: 'setItem',
-        ADD_ITEM: 'addItem',
-        ADD_GRADE_TO_STUDENT: 'addGradeToStudent',
         DELETE_ITEM: 'deleteItem',
         DELETE_GRADE: 'deleteItemGrades',
-        SET_SELECTED_CATEGORY_ID: 'setSelectedCategoryId'
     };
     var actionsType = {
         FETCH_STATE: 'fetchAllState',
@@ -56,15 +48,17 @@ define([
         FILL_GRADES_FOR_NEW_ITEM: 'fillGradesForNewItem',
         UPDATE_GRADE: 'updateGrade',
         DELETE_ITEM: 'deleteItem',
+        DELETE_CATEGORY_CHILDS: 'deleteCategoryChilds',
         UPDATE_CATEGORY: 'setCategory',
         ADD_ITEM: 'addItem',
+        DELETE_CATEGORY: 'deleteCategory',
+        ADD_CATEGORY: 'addCategory',
         UPDATE_ITEM: 'setItem',
         DELETE_ITEM_GRADES: 'deleteItemGrades'
     };
     var store = {
 
         state : {
-            aggregations: aggregations,
             additionalColumnsAtFirst: [
                 columnStudentCode,
                 columnStudentNames
@@ -90,6 +84,12 @@ define([
             [mutationsType.DELETE_ITEM] (state, itemId) {
                 Vue.delete(state.items, itemId);
             },
+            [mutationsType.DELETE_CATEGORY] (state, categoryId) {
+                const categoryIndex = state.categories
+                    .map(category => category.id)
+                    .indexOf(categoryId);
+                Vue.delete(state.categories, categoryIndex);
+            },
             [mutationsType.SET_STUDENT_SORT_METHOD](state, sortMethodType) {
                 state.sortStudentsMethodType = sortMethodType;
             },
@@ -107,6 +107,9 @@ define([
             },
             [mutationsType.ADD_ITEM](state, item) {
                 Vue.set(state.items, item.id, item);
+            },
+            [mutationsType.ADD_CATEGORY](state, category) {
+                state.categories.push(category);
             },
             [mutationsType.ADD_GRADE] (state, grade) {
                 grade.id = g_utils.ID();
@@ -133,15 +136,16 @@ define([
                 Vue.set(state.categories, category_index, newCategory);
             },
             [mutationsType.SET_GRADES] (state, newGrades) {
+
                 newGrades.forEach(newGrade => {
-                    if(newGrade !== state.grades[newGrade.id]) {
-                        Vue.set(state.grades, newGrade.id, newGrade);
-                    }
+                    newGrade.finalgrade = g_utils.removeInsignificantTrailZeros(newGrade.finalgrade);
+                    Vue.set(state.grades, newGrade.id, newGrade);
               })  ;
             },
             [mutationsType.SET_GRADE] (state, payload) {
                 let oldGrade = payload.old;
                 let newGrade = payload.new;
+                newGrade.finalgrade = g_utils.removeInsignificantTrailZeros(newGrade.finalgrade);
                 if( oldGrade ) {
                     if (oldGrade.id !== newGrade.id) {
                         Vue.delete(state.grades, oldGrade.id);
@@ -208,6 +212,26 @@ define([
                     commit(mutationsType.DELETE_GRADE, gradeId);
                 });
             },
+            [actionsType.DELETE_CATEGORY_CHILDS] ({commit, getters, dispatch}, categoryId) {
+                const childItems = getters.categoryChildItems(categoryId);
+                const childCategories = getters.categoryChildCategories(categoryId);
+                childItems.forEach(item => {
+                    commit(mutationsType.DELETE_ITEM, item.id);
+                    dispatch(actionsType.DELETE_ITEM_GRADES, item.id);
+                });
+                childCategories.forEach(category => {
+                   commit(mutationsType.DELETE_CATEGORY, category.id);
+                });
+
+            },
+            [actionsType.DELETE_CATEGORY] ({commit, getters, dispatch}, categoryId) {
+                g_service.delete_category(categoryId)
+                    .then(response => {
+                        commit(mutationsType.SET_LEVELS, response.levels);
+                        commit(mutationsType.DELETE_CATEGORY, categoryId);
+                        dispatch(actionsType.DELETE_CATEGORY_CHILDS, categoryId);
+                    })
+            },
             [actionsType.FILL_GRADES_FOR_NEW_ITEM] ({commit, state, getters}, item) {
                 let studentIds = Object.keys(state.students);
                 studentIds.forEach(studentId => {
@@ -271,11 +295,24 @@ define([
                         commit(mutationsType.SET_LEVELS, levels);
                     })
             },
+            [actionsType.ADD_CATEGORY] ({commit, state, dispatch}, payload) {
+                g_service.add_category(payload.category, payload.weight)
+                    .then( response =>  {
+                        console.log(response, 'response at add category action');
+                        let category = response.category;
+                        let category_item = response.category_item;
+                        let levels = response.levels;
+                        commit(mutationsType.ADD_ITEM, category_item);
+                        commit(mutationsType.ADD_CATEGORY, category);
+                        commit(mutationsType.SET_LEVELS, levels);
+                        dispatch(actionsType.FILL_GRADES_FOR_NEW_ITEM, category_item)
+                    });
+            },
             [actionsType.UPDATE_ITEM]({dispatch, commit}, item) {
-                console.log(item, 'item at upgrade item')
+                console.log(item, 'item at upgrade item');
                 g_service.update_item(item)
                     .then( response => {
-                        console.log(response, 'response at update item')
+                        console.log(response, 'response at update item');
                         let item = response.item;
                         let levels = response.levels;
                         commit(mutationsType.SET_ITEM, item);
