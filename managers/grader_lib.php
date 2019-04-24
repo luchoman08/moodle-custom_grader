@@ -150,12 +150,9 @@ function get_categories_global_grade_book($id_curso)
 
 function update_grade_items_by_course($course_id)
 {
-
-    // $course_item = grade_item::fetch_course_item($courseid);
-    // $course_item->regrading_finished();
     $grade_items = grade_item::fetch_all(array('courseid' => $course_id, 'needsupdate' => 1));
     foreach ($grade_items as $item) {
-        if ($item->needsupdate = 1) {
+        if ($item->needsupdate === 1) {
             $item->regrading_finished();
         }
     }
@@ -321,7 +318,7 @@ function editCategory($category) {
  * @param $name --> category name
  * @param $weighted --> type of qualification(aggregation)
  * @param $weight --> weighetd value
- * @return integer --- ok->1 || error->0
+ * @return array|false --- ['category'=> g: grade_category, 'category_item'=>i: grade_item] || false
  **/
 
 function insertCategory($course, $father, $name, $weighted, $weight)
@@ -338,17 +335,23 @@ function insertCategory($course, $father, $name, $weighted, $weight)
     $object->timemodified = $object->timecreated;
     $object->aggregateonlygraded = 0;
     $object->aggregateoutcomes = 0;
+    $transaction = $DB->start_delegated_transaction();
+    $category_id = $DB->insert_record('grade_categories', $object);
 
-    $succes = $DB->insert_record('grade_categories', $object);
-
-    if ($succes) {
-        if (insertItem($course, $succes, $name, $weight, false) === 1) {
-            return 1;
+    if ($category_id) {
+        $category_item_id = insertItem($course, $category_id, $name, $weight, false);
+        $category_item = grade_item::fetch(array('id'=>$category_item_id));
+        $category = grade_category::fetch(array('id'=>$category_id));
+        $category_grade_item = $category->get_grade_item();
+        $category->grade_item = $category_grade_item->id;
+        if ($category_item !== false) {
+            $DB->commit_delegated_transaction($transaction);
+            return array('category'=> $category, 'category_item'=> $category_item);
         } else {
-            return 0;
+            return false;
         }
     }
-    return 0;
+    return false;
 }
 
 /**

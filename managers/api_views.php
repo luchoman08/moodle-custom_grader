@@ -57,7 +57,7 @@ Class UpdateItem extends BaseAPIView {
         $response = [
             'item' => $editedItemResponse,
             'levels' => $levels,
-            'other_grades'=> get_student_grades($this->data['courseid'])
+            'other_grades'=> get_student_grades($editedItemResponse->courseid)
             ];
         return $response;
     }
@@ -75,17 +75,58 @@ class AddItem extends BaseAPIView {
     public function get_required_data(): array {
         return ['item'];
     }
+
+    /**
+     * @return array
+     * @throws dml_exception
+     */
     public function send_response() {
         /** @var  $item grade_item */
         $item = $this->data['item'];
         $item_or_false = insertItem($item->courseid, $item->parent_category, $item->itemname, $item->aggregationcoef, true );
-        if ($item_or_false !== true) {
+        if ($item_or_false !== false) {
             $item = grade_item::fetch(array('id'=>$item_or_false));
         }
         $levels = get_table_levels($item->courseid);
         $response = [
             'levels'=>$levels,
             'item'=>$item,
+        ];
+        return $response;
+    }
+}
+
+/**
+ * Class Category
+ * Required item properties are:
+ * - courseid
+ * - parent_category
+ * - itemname
+ * - aggregationcoef
+ */
+class AddCategory extends BaseAPIView {
+    public function get_required_data(): array {
+        return ['category', 'weight'];
+    }
+    public function send_response() {
+        /** @var  $category grade_category */
+        $category = $this->data['category'];
+        $weight = $this->data['weight'];
+        $cat_creation_response = insertCategory(
+            $category->courseid,
+            $category->parent_category,
+            $category->fullname,
+            $category->aggregation,
+            $weight);
+        if ($cat_creation_response !== false) {
+            $category = $cat_creation_response['category'];
+            $item = $cat_creation_response['category_item'];
+        }
+        $levels = get_table_levels($category->courseid);
+        $response = [
+            'levels'=>$levels,
+            'category_item'=>$item,
+            'category'=>$category,
         ];
         return $response;
     }
@@ -106,14 +147,8 @@ class DeleteItem extends BaseAPIView {
 }
 
 class DeleteCategory extends BaseAPIView {
-    public function get_required_data(): array {
-        return [
-            'categoryId',
-            'courseId'
-        ];
-    }
     public function send_response() {
-        $category_id = $this->data['category_id'];
+        $category_id = $this->args['category_id'];
         $category = grade_category::fetch(array('id'=>$category_id));
         $course_id= $category->courseid;
         $deleted = delete_category($category_id, $course_id);
@@ -146,7 +181,7 @@ class UpdateGrade extends BaseAPIView {
         } else {
             return array(
                 'grade'=> grade_grade::fetch(array('userid'=>$userid , 'itemid'=>$itemid)),
-                'other_grades'=> get_student_grades($this->data['courseid'], $itemid, $userid)
+                'other_grades'=> get_student_grades($this->data['courseid'], null, $userid)
             );
         }
 
