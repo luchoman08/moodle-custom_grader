@@ -59,6 +59,7 @@ define([
     var store = {
 
         state : {
+            decimalPlaces: 2,
             additionalColumnsAtFirst: [
                 columnStudentCode,
                 columnStudentNames
@@ -136,9 +137,22 @@ define([
                 Vue.set(state.categories, category_index, newCategory);
             },
             [mutationsType.SET_GRADES] (state, newGrades) {
-
                 newGrades.forEach(newGrade => {
                     newGrade.finalgrade = g_utils.removeInsignificantTrailZeros(newGrade.finalgrade);
+
+                    if(!state.grades[newGrade.id]) {
+                        const oldGrade = Object.values(state.grades).find(grade =>
+                            grade.itemid === newGrade.itemid &&
+                            grade.userid === newGrade.userid);
+                        state.grades[newGrade.id] =  newGrade;
+                        const studentGradeIds = state.students[oldGrade.userid].gradeIds;
+                        const newGradeIds =
+                            [...studentGradeIds.filter(gradeId => gradeId !== oldGrade.id), newGrade.id];
+                        state.students[newGrade.userid] = {...state.students[newGrade.userid], gradeIds: newGradeIds};
+                        Vue.delete(state.grades, oldGrade.id);
+                    }
+                    console.log('por alguna razon desconocida no actualizo la nota', newGrade.id, 'nueva nota', newGrade.finalgrade);
+                    console.log('en teoria, la nota es ', state.grades[newGrade.id].finalgrade);
                     Vue.set(state.grades, newGrade.id, newGrade);
               })  ;
             },
@@ -146,16 +160,16 @@ define([
                 let oldGrade = payload.old;
                 let newGrade = payload.new;
                 newGrade.finalgrade = g_utils.removeInsignificantTrailZeros(newGrade.finalgrade);
+                state.grades[newGrade.id] = newGrade;
                 if( oldGrade ) {
                     if (oldGrade.id !== newGrade.id) {
+                        const studentGradeIds = state.students[oldGrade.userid].gradeIds;
+                        const newGradeIds =
+                            [...studentGradeIds.filter(gradeId => gradeId !== oldGrade.id), newGrade.id];
+                        state.students[oldGrade.userid] = {...state.students[oldGrade.userid], gradeIds: newGradeIds};
                         Vue.delete(state.grades, oldGrade.id);
-                        let studentGradeIds = state.students[student.id].gradeIds;
-                        let newGradeIds =
-                            [...studentGradeIds.filter(grade => grade.id !== oldGrade.id), newGrade.id]
-                        Vue.set(state.students[student.id], 'gradeIds', newGradeIds);
                     }
                 }
-                Vue.set(state.grades, newGrade.id, newGrade);
             },
             [mutationsType.SET_SELECTED_CATEGORY_ID] (state, newSelectedId) {
                 state.selectedCategoryId = newSelectedId;

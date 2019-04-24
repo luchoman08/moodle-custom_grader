@@ -7,6 +7,13 @@ define([], function () {
             return value.toString();
         }
     };
+
+    var round = function (number, decimalPlaces)
+    {
+        var flotante = parseFloat(number);
+        var result  = Math.round(flotante*Math.pow(10,decimalPlaces))/Math.pow(10,decimalPlaces);
+        return result;
+    };
     var ID = function () {
         // Math.random should be unique because of its seeding algorithm.
         // Convert it to base 36 (numbers + letters), and grab the first 9 characters
@@ -34,6 +41,7 @@ define([], function () {
         removeInsignificantTrailZeros: removeInsignificantTrailZeros,
         getCourseId: getCourseId,
         ID: ID,
+        round: round,
         orderGradeIdsInItemSetOrder: orderGradeIdsInItemSetOrder
     };
 });
