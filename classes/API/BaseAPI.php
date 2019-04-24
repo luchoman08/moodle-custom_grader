@@ -117,7 +117,7 @@ class BaseAPI  extends Validable {
         }
     }
     public function send_errors() {
-        http_response_code(404);
+        http_response_code(422);
         header('Content-Type: application/json');
 
         echo json_encode($this->get_errors_object());
