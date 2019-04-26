@@ -9,6 +9,7 @@ $api->put('/category', UpdateCategory::class);
 $api->put('/item', UpdateItem::class);
 $api->post('/category', AddCategory::class);
 $api->post('/item', AddItem::class);
+$api->post('/partial_exam', AddPartialExam::class);
 $api->delete('/item/:item_id', DeleteItem::class);
 $api->delete('/category/:category_id', DeleteCategory::class);
 $api->run();

@@ -1,0 +1,1 @@
+'use strict';define(['local_customgrader/grader-component-main','local_customgrader/vendor-vue'],function(a,b){var c=b.component(a.name,a.component);return{routes:[{path:'/',component:c},{path:'/bar'},{path:'*',component:c}]}});

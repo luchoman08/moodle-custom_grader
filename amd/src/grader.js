@@ -138,8 +138,8 @@ define([
 
     const categoryElement = { name: 'CATEGORÍA', id: 0 };
     const itemElement = { name: 'ÍTEM', id: 1 };
-    const partialElement = { name: 'PARCIAL', id: 2 };
-    const elementTypes = [categoryElement, itemElement, partialElement];
+    const partialExamElement = { name: 'PARCIAL', id: 2 };
+    const elementTypes = [categoryElement, itemElement, partialExamElement];
 
     var store = new Vuex.Store(g_store.store);
     var SelectAggregation = Vue.component('select-aggregation', {
@@ -164,7 +164,6 @@ define([
         },
         created: function () {
             this.aggregation = this.initialAggregation? this.initialAggregation: this.aggregation;
-            console.log(this.initialAggregation, 'first aggregation after select mounted');
         },
         methods: {
             changeAggregation($event) {
@@ -180,7 +179,7 @@ define([
                             <label for="categoryFullName">
                                 Nombre de la categoria
                             </label>
-                            <input id="categoryFullName" v-model="categoryFullName">
+                            <input :disabled="isCourseCategory" id="categoryFullName" v-model="categoryFullName">
                             <label for="aggregation">
                             Tipo de calificación
                             </label>
@@ -204,6 +203,9 @@ define([
             ...Vuex.mapGetters({
                 category: 'selectedCategory'
             }),
+            isCourseCategory: function () {
+                return this.category.depth == 1;
+            }
         },
         mounted: function () {
           this.categoryFullName = this.category.fullname;
@@ -215,7 +217,6 @@ define([
                   this.aggregation = aggregation;
                 },
                 changeAggregation(aggregation) {
-                    console.log(aggregation, 'change aggregation at edit category form');
                     this.aggregation = aggregation;
                 },
                 updateCategory() {
@@ -315,7 +316,7 @@ define([
         id="elementAggregationCoef" 
         v-model="elementAggregationCoef" type="number">
         </template>
-        <template v-if="elementTypeId === categoryElementTypeId">
+        <template v-if="elementTypeId === categoryElementTypeId || elementTypeId === partialExamElementId">
             <label >
                 Tipo de agregación
             </label>
@@ -330,6 +331,7 @@ define([
            return {
                elementTypes: elementTypes,
                categoryElementTypeId: categoryElement.id,
+               partialExamElementId: partialExamElement.id,
                elementTypeId: itemElement.id,
                elementName: '',
                aggregation: g_enums.aggregations.SIMPLE,
@@ -358,6 +360,15 @@ define([
                    courseid: this.course.id,
                };
             },
+            extractPartialExam() {
+                return {
+                    itemname: this.elementName,
+                    aggregationcoef: this.elementAggregationCoef,
+                    parent_category: this.parentCategory.id,
+                    courseid: this.course.id,
+                    aggregation: this.aggregation
+                };
+            },
             extractCategory() {
               return {
                 fullname: this.elementName,
@@ -378,6 +389,23 @@ define([
                     .catch(() => {
                         this.$toasted.show(
                             'Ha ocurrido un error guardando el nuevo item.',
+                            {duration: 3000, theme: 'bubble'}
+                        )
+                    })
+            },
+            /* examen parcial */
+            createCoursePartialExam() {
+                const partialExam = this.extractPartialExam();
+                this.$store.dispatch(g_store.actions.ADD_PARTIAL_EXAM,  partialExam)
+                    .then(()=> {
+                        this.$emit(graderVueEvents.ADD_ELEMENT_OK);
+                        this.$toasted.show(
+                            `Se ha añadido el parcial '${partialExam.itemname}'`,
+                            { duration : 3000, icon: 'fa fa-check'});
+                    })
+                    .catch(() => {
+                        this.$toasted.show(
+                            'Ha ocurrido un error guardando el nuevo parcial.',
                             {duration: 3000, theme: 'bubble'}
                         )
                     })
@@ -404,12 +432,14 @@ define([
                     this.createItem();
                } else if(this.elementTypeId === categoryElement.id) {
                    this.createCategory();
+               } else if(this.elementTypeId === partialExamElement.id) {
+                   this.createCoursePartialExam();
                }
            }
         }
 
     });
-    var ItemMiniMenuEdit = Vue.component('item-mini-menu-edit', {
+    var ItemMiniMenu = Vue.component('item-mini-menu', {
         template: `
                 <div>
                     <i class="fa fa-trash" v-on:click="deleteItem()"></i>
@@ -425,15 +455,27 @@ define([
                 }
             }
         );
-    var CategoryMiniMenuEdit = Vue.component('category-mini-menu-edit', {
+    var CategoryMiniMenu = Vue.component('category-mini-menu', {
             template: `
-                <div v-bind:style="style">
+                <div class ="category-mini-menu" v-bind:style="style">
                     <i class="fa fa-edit" v-on:click="showEditDialog"></i>
                     <i class="fa fa-plus" v-on:click="showAddElementDialog"></i>
-                    <i class="fa fa-trash" v-on:click="showDeleteElementDialog"></i>
+                    <i class="fa fa-trash" v-show="showDelete" v-on:click="showDeleteElementDialog"></i>
                 </div>
             `,
-        props: ['categoryId'],
+        props: {
+            categoryId: [Number, String],
+            showDelete : {
+                type: Boolean,
+                required: false,
+                default: true
+            },
+            allowEditName : {
+                type: Boolean,
+                required: false,
+                default: true
+            }
+        },
         data: function () {
                 return {
                     style: {
@@ -495,14 +537,87 @@ define([
         }
         }
         );
+        var ThCourse = Vue.component ('th-course', {
+            template: `
+            <th 
+            v-bind:colspan="colspan"
+            @mouseover="showMenu = true"
+            @mouseout="showMenu = false"
+            >
+           
+                <flex-row align-v="center" v-bind:style="editZoneStyles" >
+                    <span class="gradeitemheader">        
+                    {{course.fullname}}       
+                    </span>
+                    <category-mini-menu v-bind:showDelete="false" v-bind:categoryId="category.id"  v-show="showMenu"></category-mini-menu>
+                </flex-row> 
+                </th>
+            </th>
+       `,
+            props: ['colspan'],
+            data: function () {
+                return {
+                    showMenu: false,
+                    editZoneStyles: {
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, max-content)',
+                        gridColumnGap: '5px'
+                    }
+                }
+            },
+            computed: {
+                ...Vuex.mapState(['course']),
+                ...Vuex.mapGetters(['courseLevel', 'categoryById']),
+                courseCategoryId: function () {
+                    return this.courseLevel.object.id;
+                },
+                category: function () {
+                    return this.categoryById(this.courseCategoryId)
+                }
+            }
+
+        });
+        var CourseMiniMenu = Vue.component('course-mini-menu', {
+                template: `
+                <div v-bind:style="style">
+                    <i class="fa fa-plus" v-on:click="showAddElementDialog"></i>
+                </div>
+            `,
+                props: ['categoryId'],
+                data: function () {
+                    return {
+                        style: {
+                            display: "grid",
+                            gridTemplateColumns: "repeat(3, max-content)",
+                            gridColumnGap: "8px"
+                        }
+                    }
+                },
+                computed: {
+                    ...Vuex.mapGetters([
+                        'categoryById'
+                    ]),
+                    category: function () {
+                        return this.categoryById(this.categoryId);
+                    },
+                },
+                methods: {
+                    showAddElementDialog() {
+                        this.$store.commit(
+                            g_store.mutations.SET_SELECTED_CATEGORY_ID,
+                            this.category.id);
+                        this.$modal.show(modalsEnum.ADD_ELEMENT);
+                    }
+                }
+            }
+        );
     var ThCategory = Vue.component('th-category', {
        template : `    
-            <th 
-            @mouseover="showMenuItems = true"
-            @mouseout="showMenuItems = false" 
-            style="background-color: gray;" 
-            v-bind:colspan="childSize" 
-            class="category">
+            <th
+            class="th-category"
+            @mouseover="showMenu = true"
+            @mouseout="showMenu = false" 
+            v-bind:colspan="childSize" >
                 <flex-row align-v="center"  v-bind:style="editZoneStyles">
                    
                     <editable :content="category.fullname" @update="updateCategoryName"></editable>
@@ -512,7 +627,7 @@ define([
                     :content="aggregationCoef | round(2)" 
                     v-if="parentCategory.aggregation == weightedAggregation"
                     ></editable>
-                    <category-mini-menu-edit v-bind:categoryId="category.id" v-show="showMenuItems"></category-mini-menu-edit>
+                    <category-mini-menu v-bind:categoryId="category.id" v-show="true"></category-mini-menu>
                 </flex-row>
             </th>
        `,
@@ -525,7 +640,7 @@ define([
                    gridTemplateColumns: 'repeat(3, max-content)',
                    gridColumnGap: '5px'
                },
-               showMenuItems: false
+               showMenu: false
            }
         },
         computed: {
@@ -580,7 +695,7 @@ define([
     });
     var ThStudentNames = Vue.component('th-student-names', {
        template: `
-       <th id="th-student-names"> 
+       <th class="th-student-names"> 
            <flex-row>
                <a v-on:click="changeOrderToLastame()">Apellidos</a> 
                <span>/ </span>
@@ -617,12 +732,12 @@ define([
         }
 
     });
-    var TrItems = Vue.component('TrItems', {
+    var TrItems = Vue.component('tr-items', {
         template : `
-                    <tr>
+                    <tr class="tr-items">
                     <th-student-names></th-student-names>
                     <th colspan="1" v-for="additionalColumnAtFirst in additionalColumnsAtFirst" v-show="!additionalColumnAtFirst.hide">{{additionalColumnAtFirst.text}}</th>
-                    <template v-for="itemId, index) in orderedItemIds">       
+                    <template v-for="(itemId, index) in orderedItemIds">       
                         <th-item-category 
                         v-if="items[itemId].itemtype === 'category'" 
                         v-bind:itemId="items[itemId].id" 
@@ -663,7 +778,8 @@ define([
 
         var ThItemManualAndMod = Vue.component('th-item-manual-and-mod', {
             template : `         
-                <th v-cloak
+                <th class="th-item-manual-and-mod"
+                v-cloak
                  @mouseover="showMenuItems = true"
                  @mouseout="showMenuItems = false"
                 ><!--v-on:click="deleteItem(item.id)"-->
@@ -675,7 +791,7 @@ define([
                      @update="saveAggregationCoefChanges($event)" 
                      v-if="parentCategory.aggregation == weightedAggregation"
                      ></editable>
-                    <item-mini-menu-edit v-show="showMenuItems" v-bind:itemId="item.id"></item-mini-menu-edit>
+                    <item-mini-menu v-show="showMenuItems" v-bind:itemId="item.id"></item-mini-menu>
                 </flex-row>
                 </th>
    `,       data: function () {
@@ -730,7 +846,7 @@ define([
 
         var ThItemCategory = Vue.component('th-item-category', {
             template : `         
-                <th v-bind:colspan="colspan" >
+                <th class="th-item-category"v-bind:colspan="colspan" >
                             {{itemName}}
                 </th>
    `,
@@ -758,7 +874,7 @@ define([
             {
                 // language=HTML
                 template: `
-                <th scope="row">
+                <th class="th-student"scope="row">
                     {{studentFullName}}
                 </th>
                 `,
@@ -782,8 +898,17 @@ define([
         var TdGrade = Vue.component('td-grade',
             {
                template: `
-                <td  > 
-                <input v-bind:disabled="inputDisabled" type="number" v-bind:tabindex="tabIndex" step="0.1"  v-bind:max="grade.rawgrademax" v-bind:min="grade.rawgrademin" v-model.lazy="finalGrade">
+                <td  class="td-grade"> 
+                <input 
+                class="grade-input"
+                v-bind:disabled="inputDisabled" 
+                type="number" 
+                v-bind:tabindex="tabIndex" 
+                v-bind:step="step"  
+                v-bind:max="grade.rawgrademax" 
+                v-bind:min="grade.rawgrademin" 
+                v-bind:size="decimalPlaces + 1"
+                v-model.lazy="finalGrade">
                 </td>
                 `,
                 props: ['gradeId', 'studentIndex', 'itemIndex'],
@@ -793,11 +918,16 @@ define([
                 })
                 },
                 computed: {
+
                     ...Vuex.mapState([
                         'grades',
                         'items',
-                        'course'
+                        'course',
+                        'decimalPlaces'
                     ]),
+                    step: function() {
+                        return Math.pow(10, -this.decimalPlaces);
+                    },
                     ...Vuex.mapGetters([
                         'studentsCount'
                     ]),
@@ -815,7 +945,7 @@ define([
                     },
                     finalGrade: {
                         get() {
-                           return this.grade.finalgrade;
+                           return g_utils.round(this.grade.finalgrade, this.decimalPlaces);
                         },
                         set(value) {
                             this.grade.finalgrade = value;
@@ -903,6 +1033,7 @@ define([
          store: store,
          router: router,
          components: {
+             ThCourse,
              Grader,
              EditCategoryForm,
              Home,

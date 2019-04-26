@@ -51,6 +51,7 @@ define([
         DELETE_CATEGORY_CHILDS: 'deleteCategoryChilds',
         UPDATE_CATEGORY: 'setCategory',
         ADD_ITEM: 'addItem',
+        ADD_PARTIAL_EXAM: 'addPartialExam',
         DELETE_CATEGORY: 'deleteCategory',
         ADD_CATEGORY: 'addCategory',
         UPDATE_ITEM: 'setItem',
@@ -151,8 +152,6 @@ define([
                         state.students[newGrade.userid] = {...state.students[newGrade.userid], gradeIds: newGradeIds};
                         Vue.delete(state.grades, oldGrade.id);
                     }
-                    console.log('por alguna razon desconocida no actualizo la nota', newGrade.id, 'nueva nota', newGrade.finalgrade);
-                    console.log('en teoria, la nota es ', state.grades[newGrade.id].finalgrade);
                     Vue.set(state.grades, newGrade.id, newGrade);
               })  ;
             },
@@ -175,7 +174,6 @@ define([
                 state.selectedCategoryId = newSelectedId;
             },
             [mutationsType.SET_STATE] (state, newState) {
-                console.log(newState);
                 state.levels = newState.levels;
                 let studentsDict = {};
                 newState.students.forEach(student => {
@@ -221,10 +219,18 @@ define([
                         gradeIdsToDelete.push(gradeId);
                     }
                 });
-                console.log(gradeIdsToDelete, 'grade ids to delete');
                 gradeIdsToDelete.forEach(gradeId => {
                     commit(mutationsType.DELETE_GRADE, gradeId);
                 });
+            },
+            [actionsType.ADD_PARTIAL_EXAM] ({commit, getters}, partialExam) {
+              g_service.add_partial_exam(partialExam)
+                  .then(response => {
+                      commit(mutationsType.SET_LEVELS, response.levels);
+                      commit(mutationsType.ADD_CATEGORY, response.category);
+                      commit(mutationsType.ADD_ITEM, response.partial_item);
+                      commit(mutationsType.ADD_ITEM, response.optional_item);
+                  });
             },
             [actionsType.DELETE_CATEGORY_CHILDS] ({commit, getters, dispatch}, categoryId) {
                 const childItems = getters.categoryChildItems(categoryId);
@@ -242,8 +248,9 @@ define([
                 g_service.delete_category(categoryId)
                     .then(response => {
                         commit(mutationsType.SET_LEVELS, response.levels);
-                        commit(mutationsType.DELETE_CATEGORY, categoryId);
                         dispatch(actionsType.DELETE_CATEGORY_CHILDS, categoryId);
+                        commit(mutationsType.DELETE_CATEGORY, categoryId);
+
                     })
             },
             [actionsType.FILL_GRADES_FOR_NEW_ITEM] ({commit, state, getters}, item) {
@@ -294,7 +301,6 @@ define([
             [actionsType.UPDATE_GRADE] ({commit, state}, grade) {
                 g_service.update_grade(grade, state.course.id)
                     .then( response => {
-                        console.log(response, 'response at update grade');
                         commit(mutationsType.SET_GRADE, {old: grade, new: response.grade});
                         commit(mutationsType.SET_GRADES, response.other_grades);
                     });
@@ -302,7 +308,6 @@ define([
             [actionsType.UPDATE_CATEGORY]({dispatch, commit}, category) {
                 g_service.update_category(category)
                     .then( response => {
-                        console.log(response, 'response at update category')
                         let category = response.category;
                         let levels = response.levels;
                         commit(mutationsType.SET_CATEGORY, category);
@@ -312,7 +317,6 @@ define([
             [actionsType.ADD_CATEGORY] ({commit, state, dispatch}, payload) {
                 g_service.add_category(payload.category, payload.weight)
                     .then( response =>  {
-                        console.log(response, 'response at add category action');
                         let category = response.category;
                         let category_item = response.category_item;
                         let levels = response.levels;
@@ -323,10 +327,8 @@ define([
                     });
             },
             [actionsType.UPDATE_ITEM]({dispatch, commit}, item) {
-                console.log(item, 'item at upgrade item');
                 g_service.update_item(item)
                     .then( response => {
-                        console.log(response, 'response at update item');
                         let item = response.item;
                         let levels = response.levels;
                         commit(mutationsType.SET_ITEM, item);

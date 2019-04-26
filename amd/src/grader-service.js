@@ -46,12 +46,12 @@ define([
            return api_service.put('grade', send_info);
        },
        update_category: (category) => {
-           const send_info = { category: category};
+           const send_info = { category };
            console.log(send_info, 'send info at category update');
            return api_service.put('category', send_info);
        },
        add_category: (category, weight) => {
-           const send_info = { category: category, weight: weight};
+           const send_info = { category,  weight};
            console.log(send_info, 'send info at category creation');
            return api_service.post('category', send_info);
        },
@@ -60,8 +60,16 @@ define([
            console.log(send_info, 'send info at item creation');
            return api_service.post('item', send_info);
        },
+       add_partial_exam: (partial_exam) => {
+         const send_info = { partial_exam };
+         console.log(partial_exam, 'partial exam to send');
+         return api_service.post('partial_exam', send_info)
+             .then(response => {
+                 console.log(response, 'respone at add artial exam');
+             })
+       },
        update_item: (item) => {
-           const send_info = { item: item };
+           const send_info = { item };
            return api_service.put('item', send_info);
        },
        delete_item: (itemId) => {

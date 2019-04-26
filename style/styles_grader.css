@@ -1,11 +1,34 @@
 .is_ases {
-    background-color: #6071d8;
+    background-color: gray;
 }
 
 #user-grades td {
     vertical-align: middle;
     text-align: center;
 }
-#th-student-names a {
+.th-student-names a {
     cursor: pointer;
+}
+.th-category {
+    background-color: gray;
+}
+.td-grade input {
+    width: 30px;
+}
+td-grade input:
+.td-grade input::-webkit-outer-spin-button,
+.td-grade input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+.td-grade input[type=number] {
+    -moz-appearance: textfield; /* Firefox */
+}
+.th-category {
+    min-width: 130%;
+}
+.table-grader th{
+    border: 1px solid #ddd;
 }

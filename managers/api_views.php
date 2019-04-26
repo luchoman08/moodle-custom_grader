@@ -63,6 +63,46 @@ Class UpdateItem extends BaseAPIView {
     }
 }
 
+
+/**
+ * Class Add required item
+ * Required item properties are:
+ * - courseid
+ * - parent_category
+ * - itemname
+ * - aggregationcoef
+ * - aggregation
+ */
+class AddPartialExam extends BaseAPIView {
+    public function get_required_data(): array {
+        return ['partial_exam'];
+    }
+
+    /**
+     * @return array|false
+     * @throws dml_exception
+     */
+    public function send_response() {
+        $partial_exam = $this->data['partial_exam'];
+        $insert_response = insertParcial(
+            $partial_exam->courseid,
+            $partial_exam->parent_category,
+            $partial_exam->itemname,
+            $partial_exam->aggregation,
+            $partial_exam->aggregationcoef );
+        if ($insert_response !== false) {
+            $levels = get_table_levels($partial_exam->courseid);
+            $response = [
+                'levels'=>$levels,
+            ];
+            return array_merge($response, $insert_response);
+        } else {
+            $this->add_error(new CustomError(400, 'Ha ocurrido un error inesperado al guardar el item'));
+            return false;
+        }
+    }
+}
+
 /**
  * Class AddItem
  * Required item properties are:
@@ -77,22 +117,24 @@ class AddItem extends BaseAPIView {
     }
 
     /**
-     * @return array
+     * @return array|false
      * @throws dml_exception
      */
     public function send_response() {
         /** @var  $item grade_item */
         $item = $this->data['item'];
-        $item_or_false = insertItem($item->courseid, $item->parent_category, $item->itemname, $item->aggregationcoef, true );
+        $item_or_false = insertItem($item->courseid, $item->parent_category, $item->itemname, $item->aggregationcoef );
         if ($item_or_false !== false) {
-            $item = grade_item::fetch(array('id'=>$item_or_false));
+            $levels = get_table_levels($item->courseid);
+            $response = [
+                'levels'=>$levels,
+                'item'=>$item_or_false,
+            ];
+            return $response;
+        } else {
+            $this->add_error(new CustomError(400, 'Ha ocurrido un error inesperado al guardar el item'));
+            return false;
         }
-        $levels = get_table_levels($item->courseid);
-        $response = [
-            'levels'=>$levels,
-            'item'=>$item,
-        ];
-        return $response;
     }
 }
 

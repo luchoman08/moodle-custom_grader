@@ -227,23 +227,34 @@ function get_student_grades_for_item($course_id, $item_id){
  * @param $name --> category name
  * @param $weighted --> type of qualification(aggregation)
  * @param $weight --> weighted value
- * @return integer --- ok-> 1 || error-> 0
+ * @return array|false --- ok-> 1 || error-> 0
  **/
 function insertParcial($course, $father, $name, $weighted, $weight)
 {
-    $succes = insertCategoryParcial($course, $father, $name, $weighted, $weight);
-    if ($succes != 0) {
-        if (insertItem($course, $succes, $name, 0, true) == 1) {
-            if (insertItem($course, $succes, "Opcional de " . $name, 0, true) == 1) {
-                return 1;
+    global $DB;
+    $transaction = $DB->start_delegated_transaction();
+    /** @var grade_category|false $category_or_false */
+    $category_or_false = insertCategoryParcial($course, $father, $name, $weighted, $weight);
+
+    if ($category_or_false !== false) {
+        $partial_item_or_false = insertItem($course, $category_or_false->id, $name, 0) ;
+        if ($partial_item_or_false !== false) {
+            $optional_item_or_false = insertItem($course, $category_or_false->id, "Opcional de " . $name, 0) ;
+            if ($optional_item_or_false !== false) {
+                $DB->commit_delegated_transaction($transaction);
+                return array(
+                    'category'=>$category_or_false,
+                    'partial_item'=>$partial_item_or_false,
+                    'optional_item'=>$optional_item_or_false
+                );
             } else {
-                return 0;
+                return false;
             }
         } else {
-            return 0;
+            return false;
         }
     } else {
-        return 0;
+        return false;
     }
 }
 
@@ -256,7 +267,7 @@ function insertParcial($course, $father, $name, $weighted, $weight)
  * @param $name --> category name
  * @param $weighted --> type of qualification(aggregation)
  * @param $weight --> weighted value
- * @return integer --- ok->id_cat || error->0
+ * @return false|grade_category --- ok->id_cat || error->0
  **/
 function insertCategoryParcial($course, $father, $name, $weighted, $weight)
 {
@@ -276,14 +287,14 @@ function insertCategoryParcial($course, $father, $name, $weighted, $weight)
     $succes = $DB->insert_record('grade_categories', $object);
 
     if ($succes) {
-        if (insertItem($course, $succes, $name, $weight, false) === 1) {
-            return $succes;
+        if (insertItem($course, $succes, $name, $weight, true) !== false) {
+            return grade_category::fetch(array('id'=>$succes));
         } else {
-            return 0;
+            return false;
         }
     }
 
-    return 0;
+    return false;
 }
 
 /**
@@ -339,8 +350,9 @@ function insertCategory($course, $father, $name, $weighted, $weight)
     $category_id = $DB->insert_record('grade_categories', $object);
 
     if ($category_id) {
-        $category_item_id = insertItem($course, $category_id, $name, $weight, false);
-        $category_item = grade_item::fetch(array('id'=>$category_item_id));
+        /** @var grade_category|false $category_item_or_false */
+        $category_item_or_false = insertItem($course, $category_id, $name, $weight, true);
+        $category_item = grade_item::fetch(array('id'=>$category_item_or_false->id));
         $category = grade_category::fetch(array('id'=>$category_id));
         $category_grade_item = $category->get_grade_item();
         $category->grade_item = $category_grade_item->id;
@@ -354,6 +366,7 @@ function insertCategory($course, $father, $name, $weighted, $weight)
     return false;
 }
 
+
 /**
  * Inserts an item, either flat item or an item related to a category, the last one is needed to assign a weight in case the category were a
  * daughter of another category with weighted rating
@@ -363,15 +376,15 @@ function insertCategory($course, $father, $name, $weighted, $weight)
  * @param $father --> category parent
  * @param $name --> category name
  * @param $aggregationcoef --> $aggregationcoef value
- * @param $item --> Item that'll be added
+ * @param $is_category_item --> Item that'll be added
  * @return bool|int true or new id
  * @throws dml_exception
  */
-function insertItem($course, $father, $name, $aggregationcoef, $item)
+function insertItem($course, $father, $name, $aggregationcoef, $is_category_item=false)
 {
     global $DB;
     //Instance an object item to use insert_record
-    if ($item) {
+    if (!$is_category_item) {
         $object = new stdClass;
         $object->courseid = $course;
         $object->categoryid = $father;
@@ -391,7 +404,12 @@ function insertItem($course, $father, $name, $aggregationcoef, $item)
         $object->grademax = 5;
     }
 
-    return $DB->insert_record('grade_items', $object);
+    $item_id_or_false = $DB->insert_record('grade_items', $object);
+    if($item_id_or_false) {
+        return grade_item::fetch(array('id'=>$item_id_or_false));
+    } else {
+        return false;
+    }
 }
 
 

@@ -1,0 +1,1 @@
+'use strict';define([],function(){return{round:{name:'round',func:function a(c,d,e){if('string'!=typeof c&&'number'!=typeof c)return c;'string'==typeof c&&(c=+c);var f=c.toFixed(d);return e?f:+f}}}});

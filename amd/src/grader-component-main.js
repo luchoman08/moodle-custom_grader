@@ -5,23 +5,19 @@ define([
 ], function (Vuex, g_enums, g_store) {
     var template = `
             <div>
-                <table v-if="students.length > 0" id="user-grades" class="gradereport-grader-table table">
+                <table v-if="students.length > 0" id="user-grades" class="gradereport-grader-table table table-grader">
                     <tbody>
                         <!-- COURSE_TR -->
                         <tr class="GridViewScrollHeader" >
                             <th v-bind:colspan="additionalColumnsAtFirstLength"></th>
-                            <th v-bind:colspan="gradeHeaderColspan">
-                                <span class="gradeitemheader">        
-                                    {{course.fullname}}       
-                                </span>
-                            </th>
+                            <th-course v-bind:colspan="gradeHeaderColspan"></th-course>
                         </tr>
                         <!-- END OF COURSE_TR -->
                         <!-- CATEGORIES_TRS-->
                         <tr  v-for="categoryLevel in categoryLevels" >
                             <th v-bind:colspan="additionalColumnsAtFirstLength"></th>
                             <template v-for="(element, index) in categoryLevel">
-                                <th v-if="element.type==='fillerfirst'" colspan="1"></th>
+                                <th v-if="element.type==='fillerfirst'" v-bind:colspan="element.colspan"></th>
                                 <th-category v-if="element.type === 'category' " v-bind:colspan="element.colspan" v-bind:element="element">
                                    
                                 </th-category>

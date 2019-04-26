@@ -1,0 +1,1 @@
+"use strict";define(["local_customgrader/grader-enums"],function(a){var b=[{id:a.aggregations.SIMPLE,name:"Promedio simple"},{id:a.aggregations.PROMEDIO,name:"Promedio ponderado"}];return{aggregations:b}});
