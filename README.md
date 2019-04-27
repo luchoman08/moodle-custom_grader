@@ -1,14 +1,14 @@
 # moodle-custom_grader
-Customized grader using AJAX and a wizard to configure categories and items
+Customized grader using Vue.js to configure categories and items in a 
+single page app.
 
 To install
 
 ## Way 1
 * Clone custom grader
 ~~~
-$ cd /path/to/your/moodle/dirroot
-$ cd local/
-$ git clone https://github.com/cjcruzrivera/moodle-custom_grader.git customgrader/
+$ cd /path/to/your/moodle/local/
+$ git clone https://github.com/sistemasases/moodle-custom_grader.git customgrader
 ~~~
 
 * After check Install from your Site Administration
