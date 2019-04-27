@@ -1,8 +1,6 @@
 <?php
 require_once '../../config.php';
-require_once (__DIR__ .'/managers/grader_lib.php');
 $courseid        = required_param('id', PARAM_INT);
-
 
 $PAGE->requires->jquery();
 
