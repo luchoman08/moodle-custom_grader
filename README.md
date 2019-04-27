@@ -11,7 +11,7 @@ $ cd /path/to/your/moodle/local/
 $ git clone https://github.com/sistemasases/moodle-custom_grader.git customgrader
 ~~~
 
-* After check Install from your Site Administration
+* Next check site plugins update from your Site Administration
 
 ## Way 2
 * Download Zip package
