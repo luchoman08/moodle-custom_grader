@@ -6,10 +6,500 @@
 * @license  http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
-define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert', 'local_customgrader/jqueryui'], function ($, sweetalert) {
+define([
+    'jquery',
+   /* 'local_customgrader/sweetalert',
+    'local_customgrader/bootstrap',
+    'local_customgrader/jqueryui'*/], function ($, __sweet_alert) {
+    var CONFIRMATION_BUTTON_COLOR = "#d51b23";
+    var ELEMENT_TYPES = {
+        CATEGORY : 'cat',
+        ROW: 'row',
+    };
+    var PREDEFINED_SWEET_ALERT_OPTIONS = {
+        cancelButtonClass: 'swal-button-cancel',
+        confirmButtonColor: CONFIRMATION_BUTTON_COLOR,
+        confirmButtonClass: 'swal-button-confirm'
+    };
+
+    /**
+     * @method getCourseId
+     * @desc Returns the id of the course obtained from the url
+     * @return {int} course_id
+     */
+    function getCourseId() {
+        var informacionUrl = window.location.search.split("=");
+        var curso = -1;
+        for (var i = 0; i < informacionUrl.length; i += 2) {
+            if (informacionUrl[i] === "?id") {
+                curso = informacionUrl[i + 1];
+            }
+        }
+        return curso;
+    }
+
+    var swal = function (options, callback) {
+
+        var swal_options = {...options, ...PREDEFINED_SWEET_ALERT_OPTIONS };
+        return __sweet_alert(
+            swal_options,
+            callback
+        );
+    };
+
+
+    /**
+     * @method load_parent_category
+     * @desc Load parent categories options in a select
+     * @param {int} id_course
+     * @param {int} id_element
+     * @param {char} type_e
+     * @return {void}
+     */
+    function load_parent_category(id_course, id_element, type_e) {
+        $.ajax({
+            type: "POST",
+            data: {
+                course: id_course,
+                element: id_element,
+                type_e: type_e,
+                type: "loadParentCat"
+            },
+            url: "managers/ajax_processing.php",
+            success: function (msg) {
+                console.log(msg);
+                $('#padre').html(msg.html);
+            },
+            dataType: "json",
+            cache: "false",
+            error: function (msg) {
+                console.log('ajax error');
+                console.log(msg);
+            },
+        });
+
+    }
+
+    /**
+     * @method deleteElement
+     * @desc Delete an item or category
+     * @param {int} id_e
+     * @param {int} id_course
+     * @param {char} type_e
+     * @return {Promise}
+     */
+    var deleteElement = function (id_e, id_course, type_e) {
+        return $.ajax({
+            type: "POST",
+            data: {
+                type_ajax: "deleteElement",
+                id: id_e,
+                courseid: id_course,
+                type: type_e
+            },
+            dataType: "json",
+            cache: "false",
+            url: "managers/ajax_processing.php"
+        });
+    };
+
+
+
+
+    /**
+     * @method createElement
+     * @desc Validate info and using ajax create an element
+     * @param {int} aggParent
+     * @param {int} idParent
+     * @return {void}
+     */
+    function createElement(aggParent, idParent) {
+
+        var tipoItem = $("#tipoItem").val();
+        var curso = getCourseId();
+
+        if (tipoItem == 'CATEGORÍA') {
+            if (validateDataCat(aggParent)) {
+                var name = $.trim($('#inputNombre').val());
+                var weigth = $('#inputValor').val();
+                var agg = getAggregation($('#tipoCalificacion').prop('selectedIndex'));
+                $.ajax({
+                    type: "POST",
+                    data: {
+                        course: curso,
+                        parent: idParent,
+                        fullname: name,
+                        agregation: agg,
+                        tipo: tipoItem,
+                        peso: weigth
+                    },
+                    url: "managers/ajax_processing.php",
+                    success: function (msg) {
+                        //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
+                        if (msg == 1) {
+
+                            swal({
+                                title: "Categoria añadida con exito",
+                                html: true,
+                                type: "success",
+                                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                            });
+                            loadCategories(curso);
+                        }
+                        else if (msg == 0) {
+                            //si no fue exitosa la creacion se envia el mensaje de alerta
+                            swal({
+                                title: "Error al añadir la categoria (server error)",
+                                html: true,
+                                type: "error",
+                                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                            });
+                        }
+
+                    },
+                    cache: "false",
+                    error: function (msg) {
+                        swal({
+                            title: "Error al intentar añadir la categoria",
+                            html: true,
+                            type: "error",
+                            confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                        });
+                        console.log(msg);
+                    },
+                });
+            }
+        }
+        else if (tipoItem == 'ÍTEM') {
+            if (validateDataIt(aggParent)) {
+                var name = $.trim($('#inputNombre').val());
+                var weigth = $('#inputValor').val();
+                $.ajax({
+                    type: "POST",
+                    data: {
+                        course: curso,
+                        parent: idParent,
+                        fullname: name,
+                        tipo: tipoItem,
+                        peso: weigth
+                    },
+                    url: "managers/ajax_processing.php",
+                    success: function (msg) {
+                        //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
+                        if (msg == 1) {
+                            swal({
+                                title: "item añadido con exito",
+                                html: true,
+                                type: "success",
+                                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                            });
+                            loadCategories(curso);
+                        }
+                        else if (msg == 0) {
+                            swal({
+                                title: "Error al añadir el item (server error)",
+                                html: true,
+                                type: "error",
+                                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                            });
+                        }
+
+                    },
+                    cache: "false",
+                    error: function (msg) {
+                        swal({
+                            title: "Error al intentar añadir el item",
+                            html: true,
+                            type: "error",
+                            confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                        });
+                        console.log(msg);
+                    },
+                });
+            }
+        }
+        else if (tipoItem == 'PARCIAL') {
+            if (validateDataParcial(aggParent)) {
+                var name = $.trim($('#inputNombre').val());
+                var weigth = $('#inputValor').val();
+                $.ajax({
+                    type: "POST",
+                    data: {
+                        course: curso,
+                        parent: idParent,
+                        fullname: name,
+                        agregation: 6,
+                        tipo: tipoItem,
+                        peso: weigth
+                    },
+                    url: "managers/ajax_processing.php",
+                    success: function (msg) {
+                        //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
+                        if (msg == 1) {
+
+                            swal({
+                                title: "Categoria añadida con exito",
+                                html: true,
+                                type: "success",
+                                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                            });
+                            loadCategories(curso);
+                        }
+                        else if (msg == 0) {
+                            //si no fue exitosa la creacion se envia el mensaje de alerta
+                            swal({
+                                title: "Error al añadir la categoria (server error)",
+                                html: true,
+                                type: "error",
+                                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                            });
+                        }
+
+                    },
+                    cache: "false",
+                    error: function (msg) {
+                        swal({
+                            title: "Error al intentar añadir la categoria",
+                            html: true,
+                            type: "error",
+                            confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                        });
+                        console.log(msg);
+                    },
+                });
+            }
+        }
+        else {
+            swal({
+                title: "Seleccione el tipo de elemento que desea crear",
+                html: true,
+                type: "warning",
+                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+            });
+        }
+
+
+    }
+
+    function getAggregation(index) {
+        switch (index) {
+            case 1:
+                return 0;
+                break;
+            case 2:
+                return 10;
+                break;
+        }
+    }
+
+    /**
+     * @method validateDataIt
+     * @desc Validate information when creating an Item
+     * @param {int} aggregation
+     * @return {void}
+     */
+    function validateDataIt(aggregation) {
+        var nombre = $.trim($('#inputNombre').val());
+        if (nombre === '') {
+            swal({
+                title: "Ingrese el nombre del ítem que desea crear",
+                html: true,
+                type: "warning",
+                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+            });
+            return false;
+        }
+        if (aggregation === 10) {
+            var peso = $('#inputValor').val();
+            if (peso === '') {
+                swal({
+                    title: "Ingrese un peso válido entre 0 y " + maxweight,
+                    html: true,
+                    type: "warning",
+                    confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                });
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @method validateDataParcial
+     * @desc Validate information when creating parcial category
+     * @param {int} aggregation
+     * @return {void}
+     */
+    function validateDataParcial(aggregation) {
+        var nombre = $.trim($('#inputNombre').val());
+        if (nombre === '') {
+            swal({
+                title: "Ingrese el nombre del parcial que desea crear",
+                html: true,
+                type: "warning",
+                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+            });
+            return false;
+        }
+        if (aggregation === 10) {
+            var peso = $('#inputValor').val();
+            if (peso == '') {
+                swal({
+                    title: "Ingrese un peso válido entre 0 y " + maxweight,
+                    html: true,
+                    type: "warning",
+                    confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                });
+                return false;
+            }
+        }
+
+        return true;
+    }
+    /**
+     * @method loadCategories
+     * @desc Load categories and items in the wizard
+     * @param {int} id_course
+     * @return {void}
+     */
+    function loadCategories(id) {
+        $.ajax({
+            type: "POST",
+            data: {
+                course: id,
+                type: "loadCat"
+            },
+            url: "managers/ajax_processing.php",
+            success: function (msg) {
+                $("#mymodalbody").html(msg);
+            },
+            dataType: "text",
+            cache: "false",
+            error: function (msg) {
+                console.log(msg);
+            },
+        });
+    }
+    /**
+     * @method validateDataCat
+     * @desc Validate information when creating category
+     * @param {int} aggregation
+     * @return {void}
+     */
+    function validateDataCat(aggregation) {
+        if ($('#tipoCalificacion').prop('selectedIndex') == 0) {
+            swal({
+                title: "Seleccione el tipo de calificación de la categoría que desea crear",
+                html: true,
+                type: "warning",
+                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+            });
+            return false;
+        }
+        var nombre = $.trim($('#inputNombre').val());
+        if (nombre == '') {
+            swal({
+                title: "Ingrese el nombre de la categoría que desea crear",
+                html: true,
+                type: "warning",
+                confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+            });
+            return false;
+        }
+        if (aggregation == 10) {
+            var peso = $('#inputValor').val();
+            if (peso == '') {
+                swal({
+                    title: "Ingrese un peso válido entre 0 y " + maxweight,
+                    html: true,
+                    type: "warning",
+                    confirmButtonColor: CONFIRMATION_BUTTON_COLOR
+                });
+                return false;
+            }
+        }
+        else {
+
+        }
+        return true;
+    }
+
+    /**
+     *
+     * @param element_id
+     * @param element_type
+     * @param element_name
+     * @param course_id
+     * @param callback_on_success Optional callback to be executed on success delete element
+     * @returns {*}
+     */
+    var show_delete_element_dialog = function (element_id, element_type, element_name, course_id, callback_on_success) {
+        var tipo = 'No seleccionado';
+        if (element_type === ELEMENT_TYPES.CATEGORY) {
+             tipo = "la categoria: " + element_name;
+        } else {
+            tipo = "el item: " + element_name;
+        }
+        var titulo = "Esta seguro que desea eliminar " + tipo + "?";
+        return swal({
+                title: titulo,
+                text: "Tenga en cuenta que NO SE PODRAN RECUPERAR ninguna de la notas que haya registrado en este elemento una vez borrado!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Aceptar, Borrar " + tipo,
+                cancelButtonText: "Cancelar",
+                closeOnCancel: true
+            },
+            (isConfirm) => {
+                if (isConfirm) {
+                    console.log('pos si0');
+                    return deleteElement(element_id, course_id, element_type)
+                        .then(response => {
+                            swal({
+                                title: "Listo",
+                                text: response.msg,
+                                type: "success",
+                                showCancelButton: false,
+                                showConfirmButton: false,
+                                timer: 2400,
+                            });
+
+                            loadCategories(course_id);
+                            if(callback_on_success) {
+                                callback_on_success();
+                            }
+                        })
+                        .catch(response=> {
+                            console.log(response);
+                        });
+                } else {
+                    swal({
+                        title: "Cancelado",
+                        type: "error",
+                        showCancelButton: false,
+                        showConfirmButton: false,
+                        timer: 1200,
+                    });
+                    return false;
+                }
+            });
+    };
+
+    var get_add_element_form = function () {
+        var newDiv = $("<div class = 'divForm' style= 'display:none'>");
+        newDiv.load("templates/categories_form.html");
+        newDiv.toggle('slow', 'swing');
+        return newDiv;
+    };
 
     return {
-
+        deleteElement: deleteElement,
+        getCourseId: getCourseId,
+        get_add_element_form: get_add_element_form,
+        show_delete_element_dialog: show_delete_element_dialog,
+        ELEMENT_TYPES: ELEMENT_TYPES,
         init: function () {
             var old_weight;
             var maxweight;
@@ -74,7 +564,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                 }
 
                 //se carga la informacion del elemento
-                var id_course = getCourseid();
+                var id_course = getCourseId();
                 var id_element = $(this).attr('id');
                 $('#save_edit').attr('name', id_element);
 
@@ -88,7 +578,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         $('#otro').show();
                     }
                     $('#calific').prop('value', tipo);
-                    var type = 'cat';
+                    var type =  ELEMENT_TYPES.CATEGORY;
                     var nombre = $(this).parent().parent().text();
                     if (nombre.search("-") == -1) {
                         var nom_text = nombre.split("(");
@@ -173,7 +663,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         text: "No es posible editar una categoria con un tipo de calificacion diferente a Promedio Simple, Promedio Ponderado, o Calificacion mas alta.\n Por favor seleccione uno de estos tipos de calificacion",
                         html: true,
                         type: "warning",
-                        confirmButtonColor: "#d51b23"
+                        confirmButtonColor: CONFIRMATION_BUTTON_COLOR
                     });
                     return;
                 }
@@ -185,7 +675,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         text: "El peso ingresado supera el peso máximo posible de la categoria padre que es: " + maxweight + "% \n Para crear un nuevo elemento primero configure los pesos de los demas.",
                         html: true,
                         type: "warning",
-                        confirmButtonColor: "#d51b23"
+                        confirmButtonColor: CONFIRMATION_BUTTON_COLOR
                     });
                     return;
                 }
@@ -195,7 +685,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         title: "Ingrese el nuevo nombre del elemento",
                         html: true,
                         type: "warning",
-                        confirmButtonColor: "#d51b23"
+                        confirmButtonColor: CONFIRMATION_BUTTON_COLOR
                     });
                     return;
                 }
@@ -205,10 +695,10 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                     var type_e = "it";
                     new_calif = false;
                 } else {
-                    type_e = "cat";
+                    type_e = ELEMENT_TYPES.CATEGORY;
                 }
 
-                var course_id = getCourseid();
+                var course_id = getCourseId();
                 $.ajax({
                     type: "POST",
                     data: {
@@ -259,41 +749,11 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
              */
             $(document).on('click', '.delete', function () {
                 var element = $(this).parent().parent().parent().attr('id').split('_');
-                var courseid = getCourseid();
-                var name = $(this).attr("data-name");
-                var id = element[1];
-                var type = element[0];
-                if (type === 'cat') {
-                    var tipo = "la categoria: " + name;
-                } else {
-                    var tipo = "el item: " + name;
-                    
-                }
-                var titulo = "Esta seguro que desea eliminar " + tipo + "?";
-                swal({
-                    title: titulo,
-                    text: "Tenga en cuenta que NO SE PODRAN RECUPERAR ninguna de la notas que haya registrado en este elemento una vez borrado!",
-                    type: "warning",
-                    showCancelButton: true,
-                    confirmButtonClass: "btn-danger",
-                    confirmButtonText: "Aceptar, Borrar " + tipo,
-                    cancelButtonText: "Cancelar",
-                    closeOnConfirm: false,
-                    closeOnCancel: false
-                },
-                    function (isConfirm) {
-                        if (isConfirm) {
-                            deleteElement(id, courseid, type);
-                        } else {
-                            swal({
-                                title: "Cancelado",
-                                type: "error",
-                                showCancelButton: false,
-                                showConfirmButton: false,
-                                timer: 1200,
-                            });
-                        }
-                    });
+                var course_id = getCourseId();
+                var element_name = $(this).attr("data-name");
+                var element_id = element[1];
+                var element_type= element[0];
+                show_delete_element_dialog(element_id, element_type, element_name, course_id);
 
             });
 
@@ -305,7 +765,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                         text: "\n\r El peso de los elementos dentro de ésta suma 100%.\n\r Para crear un nuevo elemento primero configure los pesos de los demas.",
                         html: true,
                         type: "warning",
-                        confirmButtonColor: "#d51b23"
+                        confirmButtonColor: CONFIRMATION_BUTTON_COLOR
                     });
                     return;
                 }
@@ -313,13 +773,12 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                 $('.delete').prop('disabled', true);
                 $('.edit').prop('disabled', true);
 
-                var newDiv = $("<div class = 'divForm' style= 'display:none'>");
-                newDiv.load("templates/categories_form.html");
-                newDiv.toggle('slow', 'swing');
+
 
                 var parent = $(this).parent().parent();
                 parent.append('<hr style = "margin: 6px 0;border-top: 1px solid #ddd">');
-                parent.append(newDiv);
+                var add_element_form = get_add_element_form();
+                parent.append(add_element_form);
 
                 window.setTimeout(function () {
 
@@ -338,7 +797,7 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                                     text: "\n\rUsted ingresó: " + numero,
                                     html: true,
                                     type: "warning",
-                                    confirmButtonColor: "#d51b23"
+                                    confirmButtonColor: CONFIRMATION_BUTTON_COLOR
                                 });
                                 $(this).val('');
                             }
@@ -376,417 +835,13 @@ define(['jquery', 'local_customgrader/bootstrap', 'local_customgrader/sweetalert
                     });
 
                     $('#cancel').on('click', function () {
-                        var id = getCourseid();
+                        var id = getCourseId();
                         loadCategories(id);
                     });
                 }, 400);
             });
 
-            /**
-            * @method load_parent_category
-            * @desc Load parent categories options in a select 
-            * @param {int} id_course 
-            * @param {int} id_element 
-            * @param {char} type_e 
-            * @return {void}
-            */
-            function load_parent_category(id_course, id_element, type_e) {
-                $.ajax({
-                    type: "POST",
-                    data: {
-                        course: id_course,
-                        element: id_element,
-                        type_e: type_e,
-                        type: "loadParentCat"
-                    },
-                    url: "managers/ajax_processing.php",
-                    success: function (msg) {
-                        console.log(msg);
-                        $('#padre').html(msg.html);
-                    },
-                    dataType: "json",
-                    cache: "false",
-                    error: function (msg) {
-                        console.log('ajax error');
-                        console.log(msg);
-                    },
-                });
 
-            }
-
-            /**
-            * @method deleteElement
-            * @desc Delete an item or category 
-            * @param {int} id_e 
-            * @param {int} id_course 
-            * @param {char} type_e 
-            * @return {void}
-            */
-            function deleteElement(id_e, id_course, type_e) {
-                $.ajax({
-                    type: "POST",
-                    data: {
-                        type_ajax: "deleteElement",
-                        id: id_e,
-                        courseid: id_course,
-                        type: type_e
-                    },
-                    url: "managers/ajax_processing.php",
-                    success: function (msg) {
-                        swal({
-                            title: "Listo",
-                            text: msg.msg,
-                            type: "success",
-                            showCancelButton: false,
-                            showConfirmButton: false,
-                            timer: 1200,
-                        });
-                        loadCategories(id_course);
-                    },
-                    dataType: "json",
-                    cache: "false",
-                    error: function (msg) {
-                        console.log(msg);
-                    },
-                });
-            }
-
-
-            /**
-            * @method getCourseid
-            * @desc Returns the id of the course obtained from the url
-            * @return {int} course_id
-            */
-            function getCourseid() {
-                var informacionUrl = window.location.search.split("=");
-                for (var i = 0; i < informacionUrl.length; i += 2) {
-                    if (informacionUrl[i] == "?id") {
-                        var curso = informacionUrl[i + 1];
-                    }
-                }
-                return curso;
-            }
-
-            /**
-            * @method loadCategories
-            * @desc Load categories and items in the wizard 
-            * @param {int} id_course 
-            * @return {void}
-            */
-            function loadCategories(id) {
-                $.ajax({
-                    type: "POST",
-                    data: {
-                        course: id,
-                        type: "loadCat"
-                    },
-                    url: "managers/ajax_processing.php",
-                    success: function (msg) {
-                        $("#mymodalbody").html(msg);
-                    },
-                    dataType: "text",
-                    cache: "false",
-                    error: function (msg) {
-                        console.log(msg);
-                    },
-                });
-            }
-
-            /**
-            * @method createElement
-            * @desc Validate info and using ajax create an element  
-            * @param {int} aggParent 
-            * @param {int} idParent 
-            * @return {void}
-            */
-            function createElement(aggParent, idParent) {
-
-                var tipoItem = $("#tipoItem").val();
-                var curso = getCourseid();
-
-                if (tipoItem == 'CATEGORÍA') {
-                    if (validateDataCat(aggParent)) {
-                        var name = $.trim($('#inputNombre').val());
-                        var weigth = $('#inputValor').val();
-                        var agg = getAggregation($('#tipoCalificacion').prop('selectedIndex'));
-                        $.ajax({
-                            type: "POST",
-                            data: {
-                                course: curso,
-                                parent: idParent,
-                                fullname: name,
-                                agregation: agg,
-                                tipo: tipoItem,
-                                peso: weigth
-                            },
-                            url: "managers/ajax_processing.php",
-                            success: function (msg) {
-                                //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
-                                if (msg == 1) {
-
-                                    swal({
-                                        title: "Categoria añadida con exito",
-                                        html: true,
-                                        type: "success",
-                                        confirmButtonColor: "#d51b23"
-                                    });
-                                    loadCategories(curso);
-                                }
-                                else if (msg == 0) {
-                                    //si no fue exitosa la creacion se envia el mensaje de alerta
-                                    swal({
-                                        title: "Error al añadir la categoria (server error)",
-                                        html: true,
-                                        type: "error",
-                                        confirmButtonColor: "#d51b23"
-                                    });
-                                }
-
-                            },
-                            cache: "false",
-                            error: function (msg) {
-                                swal({
-                                    title: "Error al intentar añadir la categoria",
-                                    html: true,
-                                    type: "error",
-                                    confirmButtonColor: "#d51b23"
-                                });
-                                console.log(msg);
-                            },
-                        });
-                    }
-                }
-                else if (tipoItem == 'ÍTEM') {
-                    if (validateDataIt(aggParent)) {
-                        var name = $.trim($('#inputNombre').val());
-                        var weigth = $('#inputValor').val();
-                        $.ajax({
-                            type: "POST",
-                            data: {
-                                course: curso,
-                                parent: idParent,
-                                fullname: name,
-                                tipo: tipoItem,
-                                peso: weigth
-                            },
-                            url: "managers/ajax_processing.php",
-                            success: function (msg) {
-                                //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
-                                if (msg == 1) {
-                                    swal({
-                                        title: "item añadido con exito",
-                                        html: true,
-                                        type: "success",
-                                        confirmButtonColor: "#d51b23"
-                                    });
-                                    loadCategories(curso);
-                                }
-                                else if (msg == 0) {
-                                    swal({
-                                        title: "Error al añadir el item (server error)",
-                                        html: true,
-                                        type: "error",
-                                        confirmButtonColor: "#d51b23"
-                                    });
-                                }
-
-                            },
-                            cache: "false",
-                            error: function (msg) {
-                                swal({
-                                    title: "Error al intentar añadir el item",
-                                    html: true,
-                                    type: "error",
-                                    confirmButtonColor: "#d51b23"
-                                });
-                                console.log(msg);
-                            },
-                        });
-                    }
-                }
-                else if (tipoItem == 'PARCIAL') {
-                    if (validateDataParcial(aggParent)) {
-                        var name = $.trim($('#inputNombre').val());
-                        var weigth = $('#inputValor').val();
-                        $.ajax({
-                            type: "POST",
-                            data: {
-                                course: curso,
-                                parent: idParent,
-                                fullname: name,
-                                agregation: 6,
-                                tipo: tipoItem,
-                                peso: weigth
-                            },
-                            url: "managers/ajax_processing.php",
-                            success: function (msg) {
-                                //se recibe el mensaje, si el ingreso fue exitoso entonces se recarga el combo de categorias padre
-                                if (msg == 1) {
-
-                                    swal({
-                                        title: "Categoria añadida con exito",
-                                        html: true,
-                                        type: "success",
-                                        confirmButtonColor: "#d51b23"
-                                    });
-                                    loadCategories(curso);
-                                }
-                                else if (msg == 0) {
-                                    //si no fue exitosa la creacion se envia el mensaje de alerta
-                                    swal({
-                                        title: "Error al añadir la categoria (server error)",
-                                        html: true,
-                                        type: "error",
-                                        confirmButtonColor: "#d51b23"
-                                    });
-                                }
-
-                            },
-                            cache: "false",
-                            error: function (msg) {
-                                swal({
-                                    title: "Error al intentar añadir la categoria",
-                                    html: true,
-                                    type: "error",
-                                    confirmButtonColor: "#d51b23"
-                                });
-                                console.log(msg);
-                            },
-                        });
-                    }
-                }
-                else {
-                    swal({
-                        title: "Seleccione el tipo de elemento que desea crear",
-                        html: true,
-                        type: "warning",
-                        confirmButtonColor: "#d51b23"
-                    });
-                }
-
-            
-            }
-
-            function getAggregation(index) {
-                switch (index) {
-                    case 1:
-                        return 0;
-                        break;
-                    case 2:
-                        return 10;
-                        break;
-                }
-            }
-            
-            /**
-            * @method validateDataIt
-            * @desc Validate information when creating an Item 
-            * @param {int} aggregation 
-            * @return {void}
-            */
-            function validateDataIt(aggregation) {
-                var nombre = $.trim($('#inputNombre').val());
-                if (nombre == '') {
-                    swal({
-                        title: "Ingrese el nombre del ítem que desea crear",
-                        html: true,
-                        type: "warning",
-                        confirmButtonColor: "#d51b23"
-                    });
-                    return false;
-                }
-                if (aggregation == 10) {
-                    var peso = $('#inputValor').val();
-                    if (peso == '') {
-                        swal({
-                            title: "Ingrese un peso válido entre 0 y " + maxweight,
-                            html: true,
-                            type: "warning",
-                            confirmButtonColor: "#d51b23"
-                        });
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            /**
-            * @method validateDataParcial
-            * @desc Validate information when creating parcial category 
-            * @param {int} aggregation 
-            * @return {void}
-            */
-            function validateDataParcial(aggregation) {
-                var nombre = $.trim($('#inputNombre').val());
-                if (nombre == '') {
-                    swal({
-                        title: "Ingrese el nombre del parcial que desea crear",
-                        html: true,
-                        type: "warning",
-                        confirmButtonColor: "#d51b23"
-                    });
-                    return false;
-                }
-                if (aggregation == 10) {
-                    var peso = $('#inputValor').val();
-                    if (peso == '') {
-                        swal({
-                            title: "Ingrese un peso válido entre 0 y " + maxweight,
-                            html: true,
-                            type: "warning",
-                            confirmButtonColor: "#d51b23"
-                        });
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            /**
-            * @method validateDataCat
-            * @desc Validate information when creating category 
-            * @param {int} aggregation 
-            * @return {void}
-            */
-            function validateDataCat(aggregation) {
-                if ($('#tipoCalificacion').prop('selectedIndex') == 0) {
-                    swal({
-                        title: "Seleccione el tipo de calificación de la categoría que desea crear",
-                        html: true,
-                        type: "warning",
-                        confirmButtonColor: "#d51b23"
-                    });
-                    return false;
-                }
-                var nombre = $.trim($('#inputNombre').val());
-                if (nombre == '') {
-                    swal({
-                        title: "Ingrese el nombre de la categoría que desea crear",
-                        html: true,
-                        type: "warning",
-                        confirmButtonColor: "#d51b23"
-                    });
-                    return false;
-                }
-                if (aggregation == 10) {
-                    var peso = $('#inputValor').val();
-                    if (peso == '') {
-                        swal({
-                            title: "Ingrese un peso válido entre 0 y " + maxweight,
-                            html: true,
-                            type: "warning",
-                            confirmButtonColor: "#d51b23"
-                        });
-                        return false;
-                    }
-                }
-                else {
-
-                }
-                return true;
-            }
 
 
         }

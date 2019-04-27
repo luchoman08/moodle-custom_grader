@@ -31,6 +31,10 @@ require_once $CFG->dirroot . '/grade/report/user/lib.php';
 ///*** Wizard categories methods ***///
 ///*********************************///
 
+const CATEGORY_ELEMENT = 'cat';
+const ITEM_ELEMENT = 'row';
+const PROMEDIO_PONDERADO = 10;
+const PROMEDIO_SIMPLE = 1;
 /** INSERTION METHODS **/
 
 /**
@@ -60,160 +64,11 @@ function insert_category($course, $father, $name, $weighted, $weight)
     }
 }
 
-/**
- * Deprecated method Instead use insert_category($params)
- *
- * It performs the insertion of a category considering whether it is of weighted type or not,
- * then it inserts the item that represents the category. The last one is needed for the category to have a weight.
- *
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $weighted --> type of qualification(aggregation)
- * @param $weight --> weighetd value
- * @return integer --- ok->1 || error->0
- **/
 
-function insertCategory($course, $father, $name, $weighted, $weight)
-{
-    global $DB;
 
-    //Instance a category object to use insert_record
-    $object = new stdClass;
-    $object->courseid = $course;
-    $object->fullname = $name;
-    $object->parent = $father;
-    $object->aggregation = $weighted;
-    $object->timecreated = time();
-    $object->timemodified = $object->timecreated;
-    $object->aggregateonlygraded = 0;
-    $object->aggregateoutcomes = 0;
 
-    $succes = $DB->insert_record('grade_categories', $object);
 
-    if ($succes) {
-        if (insertItem($course, $succes, $name, $weight, false) === 1) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    return 0;
-}
 
-/**
- * Performs the insertion of a category 'parcial'. Returns the id  the created category if it's successful, 0 otherwise
- *
- * @see insertCategoryParcial($course,$father,$name,$weighted,$weight)
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $weighted --> type of qualification(aggregation)
- * @param $weight --> weighted value
- * @return integer --- ok->id_cat || error->0
- **/
-function insertCategoryParcial($course, $father, $name, $weighted, $weight)
-{
-    global $DB;
-
-    //Instance an object category to use insert_record
-    $object = new stdClass;
-    $object->courseid = $course;
-    $object->fullname = $name;
-    $object->parent = $father;
-    $object->aggregation = $weighted;
-    $object->timecreated = time();
-    $object->timemodified = $object->timecreated;
-    $object->aggregateonlygraded = 0;
-    $object->aggregateoutcomes = 0;
-
-    $succes = $DB->insert_record('grade_categories', $object);
-
-    if ($succes) {
-        if (insertItem($course, $succes, $name, $weight, false) === 1) {
-            return $succes;
-        } else {
-            return 0;
-        }
-    }
-
-    return 0;
-}
-
-/**
- * It performs the insertion of 'parcial'
- *
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $weighted --> type of qualification(aggregation)
- * @param $weight --> weighted value
- * @return integer --- ok-> 1 || error-> 0
- **/
-function insertParcial($course, $father, $name, $weighted, $weight)
-{
-    $succes = insertCategoryParcial($course, $father, $name, $weighted, $weight);
-    if ($succes != 0) {
-        if (insertItem($course, $succes, $name, 0, true) == 1) {
-            if (insertItem($course, $succes, "Opcional de " . $name, 0, true) == 1) {
-                return 1;
-            } else {
-                return 0;
-            }
-        } else {
-            return 0;
-        }
-    } else {
-        return 0;
-    }
-}
-
-/**
- * Inserts an item, either flat item or an item related to a category, the last one is needed to assign a weight in case the category were a
- * daughter of another category with weighted rating
- *
- * @see insertItem($course,$father,$name,$valsend,$item)
- * @param $course --> course id
- * @param $father --> category parent
- * @param $name --> category name
- * @param $valsend --> category value
- * @param $item --> Item that'll be added
- * @return integer --- ok-> 1 || error-> 0
- */
-function insertItem($course, $father, $name, $valsend, $item)
-{
-    global $DB;
-
-    //Instance an object item to use insert_record
-    if ($item) {
-        $object = new stdClass;
-        $object->courseid = $course;
-        $object->categoryid = $father;
-        $object->itemname = $name;
-        $object->itemnumber = 0;
-        $object->itemtype = 'manual';
-        $object->sortorder = getNextIndex($course);
-        $object->aggregationcoef = $valsend;
-        $object->grademax = 5;
-    } else {
-        $object = new stdClass;
-        $object->courseid = $course;
-        $object->itemtype = 'category';
-        $object->sortorder = getNextIndex($course);
-        $object->aggregationcoef = $valsend;
-        $object->iteminstance = $father;
-        $object->grademax = 5;
-    }
-
-    $succes = $DB->insert_record('grade_items', $object);
-
-    if ($succes) {
-        return 1;
-    } else {
-        return 0;
-    }
-
-}
 
 /** EDITING METHODS **/
 
@@ -228,7 +83,7 @@ function insertItem($course, $father, $name, $valsend, $item)
  * @param $aggregation --> qualification type id
  * @return boolean true if category and item were both updated, false otherwise
  */
-function edit_category($courseid, $categoryid, $weight, $name, $parentid, $aggregation, $course_cat)
+function edit_category($courseid, $categoryid, $aggregationcoef, $name, $parentid, $aggregation, $course_cat)
 {
     if ($grade_category = grade_category::fetch(array('id' => $categoryid, 'courseid' => $courseid))) {
 
@@ -248,8 +103,8 @@ function edit_category($courseid, $categoryid, $weight, $name, $parentid, $aggre
 
             if ($parent_category->aggregation != 10) {
                 $grade_item->aggregationcoef = 0;
-            } else if ($grade_item->aggregationcoef != $weight) {
-                $grade_item->aggregationcoef = $weight;
+            } else if ($grade_item->aggregationcoef != $aggregationcoef) {
+                $grade_item->aggregationcoef = $aggregationcoef;
             }
 
             if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == 10) {
@@ -329,12 +184,12 @@ function edit_category($courseid, $categoryid, $weight, $name, $parentid, $aggre
  * @see edit_item($courseid, $itemid, $weight, $name, $parentid)
  * @param $courseid --> course id
  * @param $itemid --> item id
- * @param $weight --> weighted value
+ * @param $aggregationcoef --> weighted value
  * @param $name --> item name
  * @param $parentid --> parent id
  * @return boolean true if grade item was updated, false otherwise
  */
-function edit_item($courseid, $itemid, $weight, $name, $parentid)
+function edit_item($courseid, $itemid, $aggregationcoef, $name, $parentid)
 {
     if ($grade_item = grade_item::fetch(array('id' => $itemid, 'courseid' => $courseid))) {
 
@@ -347,13 +202,13 @@ function edit_item($courseid, $itemid, $weight, $name, $parentid)
         }
 
         $parent_category = $grade_item->get_parent_category();
-        if ($parent_category->aggregation != 10) {
+        if ($grade_item->itemtype != 'category' && $parent_category->aggregation != PROMEDIO_PONDERADO) {
             $grade_item->aggregationcoef = 0;
-        } else if ($grade_item->aggregationcoef != $weight) {
-            $grade_item->aggregationcoef = $weight;
+        } else if ($grade_item->aggregationcoef != $aggregationcoef) {
+            $grade_item->aggregationcoef = $aggregationcoef;
         }
 
-        if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == 10) {
+        if ($grade_item->aggregationcoef == 0 and $parent_category->aggregation == PROMEDIO_PONDERADO) {
             $grade_item->aggregationcoef = 1;
         }
 
@@ -369,33 +224,37 @@ function edit_item($courseid, $itemid, $weight, $name, $parentid)
     }
 }
 
+
 /**
- * Edits an element given an array with some specifications, including course id, element id and element aggregation.
- *
- * @see editElement($info)
- * @param $info --> indexed-array with the new element information
- * @return boolean true if the update operation was succesful, false otherwise
+ * Edit item
+ * @param grade_item $item
+ * @return bool|grade_item
  */
-function editElement($info)
-{
-
-    $type = $info['type_e'];
-    $courseid = $info['course'];
-    $elementid = $info['element'];
-    $weight = $info['newPeso'];
-    $name = $info['newNombre'];
-    $aggregation = $info['newCalific'];
-    $parentid = $info['parent'];
-    $curso = $info['curso'];
-
-    if ($type == 'it') {
-        return edit_item($courseid, $elementid, $weight, $name, $parentid);
-    } elseif ($type == 'cat') {
-        return edit_category($courseid, $elementid, $weight, $name, $parentid, $aggregation, $curso);
+function editItem($item) {
+    $edited =  edit_item(
+        $item->courseid,
+        $item->id,
+        $item->aggregationcoef,
+        $item->itemname,
+        $item->categoryid);
+    if ( $edited ) {
+        $_item = grade_item::fetch(array('id'=>$item->id));
+        return $_item;
+    } else {
+        return false;
     }
 }
 
 /** DELETING METHODS **/
+
+
+function delete_item($item_id, $courseid) {
+    return delete_element($item_id, $courseid, ITEM_ELEMENT);
+}
+function delete_category($category_id, $courseid) {
+    return delete_element($category_id, $courseid, CATEGORY_ELEMENT);
+}
+
 
 /**
  * Deletes an element of grading. (item or category)
@@ -482,7 +341,6 @@ function getCategoriesandItems($courseid)
     $report = new grade_report_user($courseid, $gpr, $context, $userid);
     reduce_table_categories($report);
     if ($report->fill_table()) {
-        //print_r($report->courseid);
         return print_table_categories($report);
     }
 }
@@ -504,93 +362,6 @@ function reduce_table_categories(&$report)
     $report->showgrade = false;
     $report->showtotalsifcontainhidden = false;
     $report->setup_table();
-}
-
-/**
- * Returns the HTML from the flexitable.
- *
- * @see print_table_categories($report)
- * @param $report --> info which will be shown
- * @return string html
- **/
-function print_table_categories($report)
-{
-    $maxspan = $report->maxdepth;
-
-    /// Build table structure
-    $html = "
-              <table cellspacing='0'
-                     cellpadding='0'
-                     summary='" . s($report->get_lang_string('tablesummary', 'gradereport_user')) . "'
-                     class='boxaligncenter generaltable user-grade'>
-              <thead>
-                  <tr>";
-
-    $html .= "
-                  </tr>
-              </thead>
-              <tbody>\n";
-
-    /// Print out the table data
-    for ($i = 0; $i < count($report->tabledata); $i++) {
-        $html .= "<tr>\n";
-        for ($j = 0; $j < count($report->tablecolumns); $j++) {
-            $name = $report->tablecolumns[$j];
-            $class = (isset($report->tabledata[$i][$name]['class'])) ? $report->tabledata[$i][$name]['class'] : '';
-            $colspan = (isset($report->tabledata[$i][$name]['colspan'])) ? "colspan='" . $report->tabledata[$i][$name]['colspan'] . "'" : '';
-            $content = (isset($report->tabledata[$i][$name]['content'])) ? $report->tabledata[$i][$name]['content'] : null;
-            $celltype = (isset($report->tabledata[$i][$name]['celltype'])) ? $report->tabledata[$i][$name]['celltype'] : 'td';
-            $id = (isset($report->tabledata[$i][$name]['id'])) ? "id='{$report->tabledata[$i][$name]['id']}'" : '';
-            $headers = (isset($report->tabledata[$i][$name]['headers'])) ? "headers='{$report->tabledata[$i][$name]['headers']}'" : '';
-            if (isset($content) && !isCategoryTotal($content)) {
-                if (isCategory($content)) {
-                    $categoryid = explode("_", $id)[1];
-                    $name = getElementName($categoryid,'cat');
-                    $weight = getweightofCategory($categoryid);
-                    $id_parent = get_id_parent_category($categoryid);
-                    if (!$weight || getAggregationofCategory($id_parent) != 10) {
-                        $weight = '-';
-                    } else {
-                        $weight = '(' . floatval($weight) . ' %)';
-                    }
-                    $aggregation = getAggregationofCategory($categoryid);
-                    $maxweight = getMaxWeight($categoryid);
-
-                    if (!$id_parent) {
-                        $maxweight_parent = $maxweight;
-                    } else {
-                        $maxweight_parent = getMaxWeight($id_parent);
-                    }
-
-                    if (!isCourseCategorie($categoryid, $report->courseid)) {
-                        $html .= "<$celltype $id $headers class='$class' $colspan style='background: #e5e3e5;'><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' data-maxweight = '$maxweight_parent' id = '$categoryid' class = 'glyphicon btn-wizard glyphicon-pencil edit'/><button title = 'Eliminar Categoría' class = 'glyphicon btn-wizard glyphicon-trash delete' data-name='$name' /></div></div></$celltype>\n";
-                    } else {
-                        $html .= "<$celltype $id $headers class='$class' style='background: #dbe9f3;' $colspan><div id = '$aggregation' class = 'agg'> $content <p style = 'display: inline' class = 'maxweight' id = '$maxweight'>$weight</p> <div id = 'buttons' style = 'float: right !important'><button title = 'Crear nuevo ítem o categoría' class = 'glyphicon btn-wizard glyphicon-plus new'/ ><button title = 'Editar Categoría' id = '$categoryid' class = 'curso glyphicon btn-wizard glyphicon-pencil edit'/></div></div></$celltype>\n";
-                    }
-                } else {
-                    $id_item = explode("_", $id)[1];
-                    $name = getElementName($id_item,'it');
-                    $weight = getweightofItem($id_item);
-                    $categoryid = get_id_parent_item($id_item, $report->courseid);
-                    if (!$weight || getAggregationofCategory($categoryid) != 10) {
-                        $weight = '-';
-                    } else {
-                        $weight = '(' . floatval($weight) . ' %)';
-                    }
-                    $maxweight = getMaxWeight($categoryid);
-                    if (isItemMod($id_item, $report->courseid)) {
-                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/></div></div> </$celltype>\n";
-                    } else {
-                        $html .= "<$celltype $id $headers class='$class' $colspan>$content <p style = 'display: inline'>$weight</p><div id = 'buttons' style = 'float: right !important'><div id = '$maxweight'><button title = 'Editar Ítem' id = '$id_item' class = 'glyphicon btn-wizard glyphicon-pencil edit'/ ' ><button title = 'Eliminar Ítem' class = 'glyphicon btn-wizard glyphicon-trash delete' data-name='$name'/></div></div> </$celltype>\n";
-                    }
-                }
-            }
-        }
-        $html .= "</tr>\n";
-    }
-
-    $html .= "</tbody></table>";
-    return $html;
 }
 
 /**
