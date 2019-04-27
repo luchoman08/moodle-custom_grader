@@ -15,15 +15,8 @@ require_once (__DIR__ . '/APIFunction.php');
  */
 class BaseAPI  extends Validable {
     /**
-     * Array of strings with the routes
-     * @var array APIFunction array
+     * @var array $functions Array of APIFunction
      */
-
-    /**
-     * @var array Array of string with the resources, can be functions or routes
-     */
-    private $resources;
-
     private $functions;
     /**
      * @var stdClass $params The params send to php
@@ -51,38 +44,43 @@ class BaseAPI  extends Validable {
         };
     }
     /**
-     * Add a element to endponint, this can be a closure with one argument (typically called $args)
-     * where this argument is the url argument if exist
-     * @param $path_format_or_func_name
-     * @param $endpoint_element
-     */
-    function get($path_format_or_func_name, $endpoint_element) {
+    * Add endpoint to API
+    * $method string HTTP Method for the endpoint, can be GET, POST, PUT OR DELETE
+    * $path_format_or_func_name string
+    * $endpoint_element closure|string  If a closure is given, an instance of APIFunction is
+    *   created in base to this closure, if string is given is spected than this is aclass name
+    *   than extends of BaseAPIView
+    */
+    private function add_endpoint($path_format_or_func_name, $endpoint_element, $method='GET') {
         if(is_object($endpoint_element) && ($endpoint_element instanceof Closure)) {
-            $this->add_function(new APIFunction($path_format_or_func_name, $endpoint_element));
+            $this->add_function(new APIFunction($path_format_or_func_name, $endpoint_element, $method));
         } elseif (is_subclass_of($endpoint_element, BaseAPIView::class)) {
 
             $function = BaseAPI::view_class_to_function($endpoint_element);
-            $this->add_function(new APIFunction($path_format_or_func_name, $function));
+            $this->add_function(new APIFunction($path_format_or_func_name, $function, $method));
         } else {
             throw(new Error('The end point element at get function in base api should be a closure or an instance of BaseAPIView'));
         }
     }
+    
     /**
      * Add a element to endponint, this can be a closure with one argument (typically called $args)
      * where this argument is the url argument if exist
      * @param $path_format_or_func_name
      * @param $endpoint_element
      */
+    function get($path_format_or_func_name, $endpoint_element) {
+        add_endpoint($path_format_or_func_name, $endpoint_element, 'GET');
+    }
+    
     function delete($path_format_or_func_name, $endpoint_element) {
-        if(is_object($endpoint_element) && ($endpoint_element instanceof Closure)) {
-            $this->add_function(new APIFunction($path_format_or_func_name, $endpoint_element, 'DELETE'));
-        } elseif (is_subclass_of($endpoint_element, BaseAPIView::class)) {
-
-            $function = BaseAPI::view_class_to_function($endpoint_element);
-            $this->add_function(new APIFunction($path_format_or_func_name, $function, 'DELETE'));
-        } else {
-            throw(new Error('The end point element at get function in base api should be a closure or an instance of BaseAPIView'));
-        }
+        add_endpoint($path_format_or_func_name, $endpoint_element, 'DELETE');
+    }
+    function post($path_format_or_func_name, $endpoint_element) {
+        add_endpoint($path_format_or_func_name, $endpoint_element, 'post');
+    }
+    function put($path_format_or_func_name, $endpoint_element) {
+         add_endpoint($path_format_or_func_name, $endpoint_element, 'PUT');
     }
     /**
      * @param $function APIFunction
@@ -94,29 +92,7 @@ class BaseAPI  extends Validable {
         array_push($this->functions, $function);
         array_push($this->resources, $function->path_format);
     }
-    function post($path_format_or_func_name, $endpoint_element) {
-       // $this->add_function(new APIFunction($path_format_or_func_name, $function, 'POST'));
-        if(is_object($endpoint_element) && ($endpoint_element instanceof Closure)) {
-            $this->add_function(new APIFunction($path_format_or_func_name, $endpoint_element, 'POST'));
-        } elseif (is_subclass_of($endpoint_element, BaseAPIView::class)) {
-            $function = BaseAPI::view_class_to_function($endpoint_element);
-            $this->add_function(new APIFunction($path_format_or_func_name, $function, 'POST'));
-        } else {
-            throw(new Error('The end point element at get function in base api should be a closure or an instance of BaseAPIView'));
-        }
-    }
-    function put($path_format_or_func_name, $endpoint_element) {
-        // $this->add_function(new APIFunction($path_format_or_func_name, $function, 'POST'));
-        if(is_object($endpoint_element) && ($endpoint_element instanceof Closure)) {
-            $this->add_function(new APIFunction($path_format_or_func_name, $endpoint_element, 'PUT'));
-        } elseif (is_subclass_of($endpoint_element, BaseAPIView::class)) {
-            $function = BaseAPI::view_class_to_function($endpoint_element);
-            $this->add_function(new APIFunction($path_format_or_func_name, $function, 'PUT'));
-        } else {
-            throw(new Error('The end point element at get function in base api should be a closure or an instance of BaseAPIView'));
-        }
-    }
-    public function send_errors() {
+    private function send_errors() {
         http_response_code(422);
         header('Content-Type: application/json');
 
@@ -148,7 +124,7 @@ class BaseAPI  extends Validable {
         return false;
     }
 
-    function get_all_resources_printable() {
+    private function get_all_resources_printable() {
         $functions_string = array();
         /** @var APIFunction $function */
         foreach ($this->functions as $function) {
@@ -167,23 +143,23 @@ class BaseAPI  extends Validable {
         $api_view = null;
         $data = null;
         $args = array();
-        /* Infering the function from post data */
         if(isset($this->params->function)) {
+            /* Infering the function from POST data */
             $target =  $this->params->function;
-            $api_view = $this->find_function($method, $target);
+            $function = $this->find_function($method, $target);
             if(isset($this->params->params)) {
                 $data = $this->params->params;
             }
-        } else { /* Infering the function from PATH_INFO */
+        } else { 
+            /* Infering the function from PATH_INFO */
             $target = $path_info;
-            $api_view = $this->find_function($method, $target);
+            $function = $this->find_function($method, $target);
             $data = $this->params; /* The request body is assumed as a data */
         }
 
         if( $api_view ) {
             $args = route_get_params($api_view->path_format,  $path_info);
-
-            $api_view->execute($args, $data);
+            $function->execute($args, $data);
         } else {
 
             $this->add_error(
