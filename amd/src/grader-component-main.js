@@ -4,8 +4,8 @@ define([
     'local_customgrader/grader-store'
 ], function (Vuex, g_enums, g_store) {
     var template = `
-            <div>
-                <table v-if="students.length > 0" id="user-grades" class="gradereport-grader-table table table-grader">
+            <div class="customgrader">
+                <table v-if="students.length > 0" id="user-grades" class="table table-striped">
                     <tbody>
                         <!-- COURSE_TR -->
                         <tr class="GridViewScrollHeader" >
