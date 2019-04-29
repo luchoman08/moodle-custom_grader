@@ -794,7 +794,7 @@ define([
                      @update="saveAggregationCoefChanges($event)" 
                      v-if="parentCategory.aggregation == weightedAggregation"
                      ></editable>
-                    <item-mini-menu v-show="showMenuItems" v-bind:itemId="item.id"></item-mini-menu>
+                    <item-mini-menu v-show="true" v-bind:itemId="item.id"></item-mini-menu>
                 </flex-row>
                 </th>
    `,       data: function () {
@@ -902,6 +902,7 @@ define([
             {
                template: `
                 <td  class="td-grade"> 
+                {{item.itemtype}}
                 <input 
                 class="grade-input"
                 v-bind:disabled="inputDisabled" 
