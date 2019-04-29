@@ -11,9 +11,7 @@
 .th-student-names a {
     cursor: pointer;
 }
-.th-category {
-    background-color: gray;
-}
+
 .td-grade input {
     width: 50px;
 }
