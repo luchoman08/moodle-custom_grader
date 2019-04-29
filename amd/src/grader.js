@@ -935,7 +935,7 @@ define([
                       return (this.itemIndex + 1) * this.studentsCount +  this.studentIndex + 1;
                     },
                     inputDisabled: function () {
-                        return this.item.itemtype==='category';
+                        return this.item.itemtype==='category' || this.item.itemtype==='course' ;
                     },
                     grade: function() {
                         return this.grades[this.gradeId];
