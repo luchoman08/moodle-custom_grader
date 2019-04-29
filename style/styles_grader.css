@@ -12,6 +12,11 @@
     cursor: pointer;
 }
 
+
+.edit-category-form,
+.add-element-form {
+    padding: 15px;
+}
 .td-grade input {
     width: 50px;
 }

@@ -173,7 +173,8 @@ define([
     });
     var EditCategoryForm = Vue.component('edit-category-form', {
             // language=HTML
-            template: `                
+            template: `    
+                <div class="edit-category-form">
                     <form>
                         <h3>Editando Categoría: {{category.fullname}}</h3>
                             <label for="categoryFullName">
@@ -189,6 +190,7 @@ define([
                             </select-aggregation>
                             <button type="button" v-on:click="updateCategory">Guardar</button>
                     </form>
+                </div>
             `
         ,
         data: function() {
@@ -294,38 +296,39 @@ define([
 
     var AddElementForm = Vue.component('add-element-form',{
        template: `
-        
-       <form>
-       <h2>Añadir elemento</h2>
-       <label></label>
-       <select id="elementType" v-model="elementTypeId">
-           <option v-for="elementType in elementTypes" v-bind:value="elementType.id">
-            {{elementType.name}}
-           </option>
-       </select>
-       <label for="elementName">
-        Nombre de el elemento
-        </label>
-        <input id="elementName" v-model="elementName">
-        <template v-if="parentCategory.aggregation == weigthedMeanOfGrades">
-            <label for="elementAggregationCoef">
-                Peso 
+        <div class="add-element-form">
+           <form>
+           <h2>Añadir elemento</h2>
+           <label></label>
+           <select id="elementType" v-model="elementTypeId">
+               <option v-for="elementType in elementTypes" v-bind:value="elementType.id">
+                {{elementType.name}}
+               </option>
+           </select>
+           <label for="elementName">
+            Nombre de el elemento
             </label>
-                    <input 
-        placeholder="Ingrese un valor entre 1 y 100" 
-        id="elementAggregationCoef" 
-        v-model="elementAggregationCoef" type="number">
-        </template>
-        <template v-if="elementTypeId === categoryElementTypeId || elementTypeId === partialExamElementId">
-            <label >
-                Tipo de agregación
-            </label>
-            <select-aggregation
-                v-bind:changeAggregation="changeAggregation"
-            />
-        </template>
-       <button type="button" v-on:click="createElement()">Añadir</button>
-       </form>
+            <input id="elementName" v-model="elementName">
+            <template v-if="parentCategory.aggregation == weigthedMeanOfGrades">
+                <label for="elementAggregationCoef">
+                    Peso 
+                </label>
+                        <input 
+            placeholder="Ingrese un valor entre 1 y 100" 
+            id="elementAggregationCoef" 
+            v-model="elementAggregationCoef" type="number">
+            </template>
+            <template v-if="elementTypeId === categoryElementTypeId || elementTypeId === partialExamElementId">
+                <label >
+                    Tipo de agregación
+                </label>
+                <select-aggregation
+                    v-bind:changeAggregation="changeAggregation"
+                />
+            </template>
+           <button type="button" v-on:click="createElement()">Añadir</button>
+           </form>
+       </div>
        `,
         data : function () {
            return {
