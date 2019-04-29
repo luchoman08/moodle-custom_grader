@@ -1,5 +1,7 @@
-.is_ases {
-    background-color: gray;
+.is_ases,
+.is_ases th,
+.is_ases td {
+    background-color: gray!important;
 }
 
 #user-grades td {
@@ -15,12 +17,17 @@
 .td-grade input {
     width: 50px;
 }
-td-grade input:
+
 .td-grade input::-webkit-outer-spin-button,
 .td-grade input::-webkit-inner-spin-button {
     /* display: none; <- Crashes Chrome on hover */
     -webkit-appearance: none;
     margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+.customgrader table,
+.customgrader table td,
+.customgrader table th {
+    border: 1px solid #ccc;
 }
 
 .td-grade input[type=number] {
@@ -29,6 +36,6 @@ td-grade input:
 .th-category {
     min-width: 130%;
 }
-.table-grader th{
-    border: 1px solid #ddd;
+.table-grader th {
+    border: 1px solid #ccc;
 }
