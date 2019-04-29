@@ -17,6 +17,16 @@
 .td-grade input {
     width: 50px;
 }
+/**
+ * Moove theme styles needed
+ * @see https://moodle.org/plugins/theme_moove
+ */
+#region-main > .card {
+    overflow-x: initial;
+}
+
+/** End Moove theme styles needed */
+
 
 .td-grade input::-webkit-outer-spin-button,
 .td-grade input::-webkit-inner-spin-button {
