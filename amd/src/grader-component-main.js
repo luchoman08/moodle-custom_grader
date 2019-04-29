@@ -80,7 +80,7 @@ define([
                 return this.studentSetSorted;
             },
             gradeHeaderColspan: function () {
-                return Number(this.courseLevel.colspan) + this.additionalColumnsAtFirstLength + this.additionalColumnsAtEndLength;
+                return Number(this.courseLevel.colspan) + this.additionalColumnsAtEndLength;
             }
 
         },
