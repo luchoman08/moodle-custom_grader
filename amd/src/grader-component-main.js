@@ -21,15 +21,12 @@ define([
                                 <th-category v-if="element.type === 'category' " v-bind:colspan="element.colspan" v-bind:element="element">
                                    
                                 </th-category>
-                                <td 
+                                <th 
+                                class="th-filler"
                                 v-if="element.type === 'filler' || element.type === 'fillerlast'" 
                                 v-bind:colspan="element.colspan"
-                                ></td>
-
+                                ></th>
                             </template>
-                            <th v-bind:colspan="additionalColumnsAtEndLength"></th>
-
-
                         </tr>
                         <!-- END OF CATEGORIES_TRS-->
                         <tr-items>  </tr-items>
@@ -72,9 +69,6 @@ define([
             ]),
             additionalColumnsAtFirstLength: function () {
                 return this.additionalColumnsAtFirst.length;
-            },
-            additionalColumnsAtEndLength: function () {
-                return this.additionalColumnsAtEnd.length;
             },
             students: function() {
                 return this.studentSetSorted;
