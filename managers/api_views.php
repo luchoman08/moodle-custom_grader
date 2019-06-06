@@ -1,7 +1,6 @@
 <?php
 require_once (__DIR__ . '/../classes/API/BaseAPIView.php');
 require_once (__DIR__ . '/../managers/grader_lib.php');
-require_once (__DIR__ . '/../managers/wizard_lib.php');
 require_once (__DIR__ . '/../classes/Errors/CustomError.php');
 
 class GetNormalizedGraderData extends BaseAPIView {
@@ -66,7 +65,7 @@ Class UpdateItem extends BaseAPIView {
 
 /**
  * Class Add required item
- * Required item properties are:
+ * partial_exam should be an object with this properties:
  * - courseid
  * - parent_category
  * - itemname
@@ -191,9 +190,11 @@ class DeleteItem extends BaseAPIView {
 class DeleteCategory extends BaseAPIView {
     public function send_response() {
         $category_id = $this->args['category_id'];
+
         $category = grade_category::fetch(array('id'=>$category_id));
         $course_id= $category->courseid;
         $deleted = delete_category($category_id, $course_id);
+
         $levels = get_table_levels($course_id);
         $response = [
             'levels' => $levels
@@ -201,7 +202,6 @@ class DeleteCategory extends BaseAPIView {
         return $response;
     }
 }
-
 
 class UpdateGrade extends BaseAPIView {
     public function get_required_data(): array {
@@ -217,6 +217,7 @@ class UpdateGrade extends BaseAPIView {
         $userid = $this->data['userid'];
         $itemid =  $this->data['itemid'];
         update_grade_items_by_course( $this->data['courseid']);
+
         if(!update_grades_moodle_($userid ,$itemid, $this->data['finalgrade'], $this->data['courseid'])) {
             $this->add_error(new CustomError(-1, 'No se ha podido actualizar la nota'));
             return false;
